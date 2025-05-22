@@ -245,7 +245,7 @@
             ttsVoice: "es-CO-SalomeNeural",
             talkingAvatarCharacter: "Max",
             talkingAvatarStyle: "business",
-            region: "eastus"
+            region: "eastus2"
         };
 
         let avatarSynthesizer;
@@ -287,10 +287,7 @@
                 const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(config.cogSvcSubKey, config.region);
                 speechConfig.speechSynthesisVoiceName = config.ttsVoice;
 
-                const videoFormat = new SpeechSDK.AvatarVideoFormat();
-                videoFormat.setCropRangeByName("FullBody");
-
-                const avatarConfig = new SpeechSDK.AvatarConfig(config.talkingAvatarCharacter, config.talkingAvatarStyle, videoFormat);
+                const avatarConfig = new SpeechSDK.AvatarConfig(config.talkingAvatarCharacter, config.talkingAvatarStyle);
                 
                 avatarSynthesizer = new SpeechSDK.AvatarSynthesizer(speechConfig, avatarConfig);
 
