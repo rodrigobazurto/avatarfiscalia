@@ -401,10 +401,13 @@
                 // Conectar video del avatar
                 avatarSynthesizer.startAvatarAsync(
                     (result) => {
+                        console.log("Avatar start result:", result);
                         if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioStarted) {
                             console.log("Avatar started successfully");
-                            avatarVideo.srcObject = result.stream;
-                            avatarVideo.play();
+                            if (result.stream) {
+                                avatarVideo.srcObject = result.stream;
+                                avatarVideo.play().catch(e => console.log("Video play error:", e));
+                            }
                             
                             isSessionActive = true;
                             updateStatus("Sesión activa - Puede hacer preguntas");
@@ -417,11 +420,30 @@
                             
                             addToConversation('Sistema', 'Sesión iniciada. ¡Hola! Soy su asistente virtual para la Transformación Digital de la Fiscalía General. ¿En qué puedo ayudarle?');
                         } else {
-                            updateStatus("Error al iniciar avatar", true);
+                            console.log("Avatar start failed, reason:", result.reason);
+                            // Activar sesión sin video para permitir solo audio
+                            isSessionActive = true;
+                            updateStatus("Sesión activa (solo audio) - Puede hacer preguntas");
+                            
+                            startSessionBtn.disabled = true;
+                            stopSessionBtn.disabled = false;
+                            sendTextBtn.disabled = false;
+                            startListeningBtn.disabled = false;
+                            
+                            addToConversation('Sistema', 'Avatar en modo audio. ¡Hola! Soy su asistente virtual para la Transformación Digital de la Fiscalía General. ¿En qué puedo ayudarle?');
                         }
                     },
                     (error) => {
-                        updateStatus(`Error: ${error}`, true);
+                        console.log("Avatar start error:", error);
+                        // Activar sesión en modo texto como fallback
+                        isSessionActive = true;
+                        updateStatus("Sesión activa (modo texto) - Puede escribir preguntas");
+                        
+                        startSessionBtn.disabled = true;
+                        stopSessionBtn.disabled = false;
+                        sendTextBtn.disabled = false;
+                        
+                        addToConversation('Sistema', 'Avatar en modo texto. ¡Hola! Soy su asistente virtual para la Transformación Digital de la Fiscalía General. ¿En qué puedo ayudarle?');
                     }
                 );
             } catch (error) {
