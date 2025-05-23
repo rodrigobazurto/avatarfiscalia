@@ -63,7 +63,7 @@
 
         #videoContainer {
             width: 100%;
-            height: calc(100% - 140px);
+            height: calc(100% - 160px);
             background: #000;
             border-radius: 15px;
             overflow: hidden;
@@ -80,7 +80,7 @@
         }
 
         .control-panel {
-            height: 125px;
+            height: 145px;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -177,6 +177,15 @@
             box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4);
         }
 
+        .button.question {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            box-shadow: 0 3px 12px rgba(33, 150, 243, 0.3);
+        }
+
+        .button.question:hover:not(:disabled) {
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+        }
+
         .status {
             padding: 8px;
             margin: 5px 0;
@@ -191,6 +200,11 @@
         .status.error {
             border-left-color: #f44336;
             background: rgba(244, 67, 54, 0.1);
+        }
+
+        .status.listening {
+            border-left-color: #2196F3;
+            background: rgba(33, 150, 243, 0.1);
         }
 
         .wake-word-info {
@@ -240,6 +254,13 @@
             justify-content: center;
         }
 
+        .word-count {
+            font-size: 10px;
+            color: rgba(255,255,255,0.7);
+            text-align: right;
+            margin-top: 4px;
+        }
+
         /* Responsivo para pantallas más pequeñas */
         @media (max-width: 1200px) {
             .main-container {
@@ -268,7 +289,7 @@
 <body>
     <div class="header">
         <h1>🏛️ Fiscalía General de la Nación</h1>
-        <p>Asistente Virtual de Transformación Digital</p>
+        <p>Asistente IA que Escucha y Pregunta sobre su Presentación</p>
     </div>
 
     <div class="main-container">
@@ -284,10 +305,12 @@
                 <div class="button-row">
                     <button id="startSession" class="button">🚀 Iniciar Avatar</button>
                     <button id="stopSession" class="button stop" disabled>⏹️ Finalizar</button>
+                    <button id="askQuestion" class="button question" disabled>🤔 Pregunta IA</button>
                 </div>
                 
                 <div class="wake-word-info">
-                    <div>💬 Activación: <span class="wake-word-highlight">"TIC" o "TOC"</span></div>
+                    <div>🎤 <span class="wake-word-highlight">Escuchando continuamente</span></div>
+                    <small>El avatar analizará lo que diga y podrá preguntar</small>
                 </div>
                 
                 <div id="status" class="status">Sistema listo. Presione 'Iniciar Avatar' para comenzar</div>
@@ -297,19 +320,20 @@
         <!-- Sección Transcripción y Respuesta (Compacta - 20%) -->
         <div class="controls-section">
             <div class="transcription-box">
-                <h3><span id="listeningIndicator"></span>🎤 Escucho</h3>
-                <textarea id="transcription" readonly placeholder="Transcripción en tiempo real..."></textarea>
+                <h3><span id="listeningIndicator"></span>📝 Transcripción Completa</h3>
+                <textarea id="transcription" readonly placeholder="Aquí se guardará todo lo que diga durante la presentación..."></textarea>
+                <div id="wordCount" class="word-count">0 palabras</div>
             </div>
 
             <div class="response-box">
-                <h3>🤖 Respuesta</h3>
-                <textarea id="avatarResponse" readonly placeholder="Respuesta del avatar..."></textarea>
+                <h3>🤖 Pregunta/Respuesta IA</h3>
+                <textarea id="avatarResponse" readonly placeholder="El avatar generará preguntas inteligentes sobre su presentación..."></textarea>
             </div>
         </div>
     </div>
 
     <div class="footer">
-        <p>© 2025 Fiscalía General de la Nación - Transformación Digital</p>
+        <p>© 2025 Fiscalía General de la Nación - IA Conversacional Avanzada</p>
     </div>
 
     <script>
@@ -320,43 +344,38 @@
             azureOpenAIApiKey: "1oSTnxg0CC9O4oIaB2a6POpWSvOIFxXP6qwR5QlgbDW2ve79fE7KJQQJ99BCACHYHv6XJ3w3AAAAACOGNk1S",
             azureOpenAIDeploymentName: "gpt-4.1",
             azureOpenAIApiVersion: "2024-02-15-preview",
-            systemPrompt: `Eres el asistente virtual oficial especializado en la Estrategia de Transformación Digital de la Fiscalía General de la Nación de Colombia, basado en la Resolución No. 0412 del 10 de septiembre de 2024 y el Direccionamiento Estratégico 2024-2028 "Experiencia e innovación al servicio de la justicia".
+            systemPrompt: `Eres un asistente IA especializado que escucha presentaciones sobre la Estrategia de Transformación Digital de la Fiscalía General de la Nación de Colombia.
 
-CONOCIMIENTO ESPECÍFICO DE LA FISCALÍA:
+TU FUNCIÓN PRINCIPAL:
+- Analizar el contenido transcrito de la presentación de la Fiscal
+- Generar preguntas inteligentes, relevantes y profesionales sobre lo expuesto
+- Hacer preguntas que demuestren comprensión profunda del tema
+- Solicitar aclaraciones sobre puntos específicos mencionados
+- Preguntar sobre implementación práctica de los conceptos expuestos
 
-DIRECCIONAMIENTO ESTRATÉGICO 2024-2028:
-- Visión: Para 2028, la Fiscalía será una institución moderna, innovadora, eficiente y comprometida con la justicia
-- 5 Pilares Estratégicos:
-  1. Priorizar investigaciones con enfoque territorial
-  2. Fortalecer análisis criminal con apoyo en tecnología
-  3. Fortalecer rutas especiales de atención a víctimas
-  4. Dinamizar mecanismos de terminación anticipada
-  5. Implementar indicadores compatibles con metas institucionales
+CONOCIMIENTO BASE DE LA FISCALÍA:
+- Direccionamiento Estratégico 2024-2028: "Experiencia e innovación al servicio de la justicia"
+- 5 Pilares Estratégicos de transformación
+- 6 Programas de Transformación Digital
+- Proyectos clave: SPOA 2, SGDEA, expediente electrónico, laboratorio de innovación
+- Marco normativo: Resolución 0412/2024
 
-ESTRATEGIA DE TRANSFORMACIÓN DIGITAL:
-- 6 Programas de Transformación:
-  1. Procesos y Experiencia Ciudadana (SPOA 2, SGDEA, expediente electrónico)
-  2. Innovación Tecnológica (IA, analítica de datos, laboratorio de innovación)
-  3. Gestión de la Información (gobierno de datos, lago de datos)
-  4. Sostenibilidad Digital (infraestructura, ciberseguridad, ITaaS)
-  5. Gobernanza Digital (políticas, estándares, marco regulatorio)
-  6. Gestión de Capacidades y Conocimiento (gestión del cambio, cultura digital)
+TIPOS DE PREGUNTAS A GENERAR:
+1. Preguntas de profundización: "¿Podría explicar más sobre [tema específico mencionado]?"
+2. Preguntas de implementación: "¿Cómo se implementará concretamente [proyecto mencionado]?"
+3. Preguntas de integración: "¿Cómo se relaciona [tema A] con [tema B] que mencionó?"
+4. Preguntas de impacto: "¿Cuál será el impacto específico de [iniciativa] en los fiscales?"
+5. Preguntas de cronograma: "¿Cuáles son los tiempos estimados para [proyecto]?"
 
-PROYECTOS CLAVE:
-- Sistema SPOA 2: Nuevo sistema misional para el Sistema Penal Oral Acusatorio
-- SGDEA: Sistema de Gestión de Documentos Electrónicos de Archivo
-- Expediente electrónico para proceso investigativo
-- Laboratorio de Innovación y Analítica
-- Plataforma de analítica de datos con IA
-- Modernización tecnológica del CTI
+ESTILO DE PREGUNTAS:
+- Formal pero conversacional
+- Específicas basadas en lo realmente dicho
+- Máximo 80 palabras por pregunta
+- Una sola pregunta por vez
+- Que demuestren escucha activa e inteligente
+- Sin emojis en las preguntas
 
-ESTILO DE RESPUESTA:
-- Español colombiano formal pero accesible
-- Máximo 100 palabras por respuesta
-- Referencias específicas a documentos oficiales
-- Enfoque en beneficios prácticos
-- Sin emojis ni caracteres especiales
-- Terminología técnica apropiada para el contexto judicial`,
+RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adicionales.`,
             sttLocale: "es-CO",
             ttsVoice: "es-CO-SalomeNeural",
             avatarCharacter: "Meg",
@@ -369,32 +388,44 @@ ESTILO DE RESPUESTA:
         let continuousRecognizer;
         let peerConnection;
         let isSessionActive = false;
-        let isWakeWordListening = false;
-        let isSpeaking = false;
-        let wakeWords = ['tic', 'toc'];
-        let responseWords = ['tic', 'toc']; // Mismas palabras para responder
+        let isListening = false;
+        let fullTranscription = ""; // Almacena toda la transcripción
+        let lastSentenceCount = 0;
 
         // Elementos DOM
         const startSessionBtn = document.getElementById('startSession');
         const stopSessionBtn = document.getElementById('stopSession');
+        const askQuestionBtn = document.getElementById('askQuestion');
         const statusDiv = document.getElementById('status');
         const transcriptionArea = document.getElementById('transcription');
         const responseArea = document.getElementById('avatarResponse');
         const listeningIndicator = document.getElementById('listeningIndicator');
+        const wordCountDiv = document.getElementById('wordCount');
 
         // Funciones de utilidad
-        function updateStatus(message, isError = false) {
+        function updateStatus(message, type = 'normal') {
             statusDiv.textContent = message;
-            statusDiv.className = isError ? 'status error' : 'status';
+            statusDiv.className = `status ${type}`;
         }
 
-        function updateListeningIndicator(isListening) {
-            listeningIndicator.innerHTML = isListening ? '<span class="listening-indicator"></span>' : '';
+        function updateListeningIndicator(isActive) {
+            listeningIndicator.innerHTML = isActive ? '<span class="listening-indicator"></span>' : '';
         }
 
-        // Obtener respuesta GPT-4
-        async function getGPTResponse(userMessage) {
+        function updateWordCount() {
+            const words = fullTranscription.trim().split(/\s+/).filter(word => word.length > 0);
+            wordCountDiv.textContent = `${words.length} palabras`;
+        }
+
+        // Generar pregunta inteligente basada en la transcripción
+        async function generateIntelligentQuestion() {
+            if (!fullTranscription.trim()) {
+                return "Señora Fiscal, estoy listo para escuchar su presentación sobre la Estrategia de Transformación Digital de la Fiscalía.";
+            }
+
             try {
+                updateStatus("🧠 Analizando presentación y generando pregunta...");
+                
                 const response = await fetch(`${config.azureOpenAIEndpoint}openai/deployments/${config.azureOpenAIDeploymentName}/chat/completions?api-version=${config.azureOpenAIApiVersion}`, {
                     method: 'POST',
                     headers: {
@@ -404,10 +435,10 @@ ESTILO DE RESPUESTA:
                     body: JSON.stringify({
                         messages: [
                             { role: "system", content: config.systemPrompt },
-                            { role: "user", content: userMessage }
+                            { role: "user", content: `Analiza esta transcripción de la presentación de la Fiscal y genera UNA pregunta inteligente y específica basada en lo que ha expuesto:\n\n"${fullTranscription}"` }
                         ],
-                        max_tokens: 300,
-                        temperature: 0.7
+                        max_tokens: 150,
+                        temperature: 0.8
                     })
                 });
 
@@ -419,7 +450,7 @@ ESTILO DE RESPUESTA:
                 return data.choices[0].message.content.trim();
             } catch (error) {
                 console.error('Error OpenAI:', error);
-                return "Disculpe, hay un problema técnico con el servicio de inteligencia artificial.";
+                return "Disculpe, Señora Fiscal, ¿podría repetir el último punto que mencionó?";
             }
         }
 
@@ -459,27 +490,25 @@ ESTILO DE RESPUESTA:
                 if (event.track.kind === 'video') {
                     mediaPlayer.playsInline = true;
                 } else {
-                    // Desmutar el audio del avatar para que se escuche
                     mediaPlayer.muted = false;
                 }
             };
 
             peerConnection.oniceconnectionstatechange = e => {
                 if (peerConnection.iceConnectionState === 'connected') {
-                    updateStatus("✅ Avatar conectado - Esperando TIC o TOC");
+                    updateStatus("✅ Avatar conectado - Comenzando escucha automática");
                     
-                    // Mensaje de bienvenida del avatar
                     setTimeout(() => {
-                        const welcomeMessage = "Hola, soy su asistente virtual especializado en Transformación Digital de la Fiscalía General de la Nación. Para activarme, diga TIC o TOC y luego haga su pregunta.";
+                        const welcomeMessage = "Buenos días, Señora Fiscal. Soy su asistente de inteligencia artificial especializado en Transformación Digital. Estoy listo para escuchar su presentación y hacerle preguntas relevantes cuando considere oportuno.";
                         responseArea.value = welcomeMessage;
                         makeAvatarSpeak(welcomeMessage).then(() => {
-                            startWakeWordListening();
+                            startContinuousListening();
                         });
                     }, 2000);
                 }
 
                 if (peerConnection.iceConnectionState === 'disconnected' || peerConnection.iceConnectionState === 'failed') {
-                    updateStatus("❌ Conexión perdida", true);
+                    updateStatus("❌ Conexión perdida", 'error');
                     stopSession();
                 }
             };
@@ -489,19 +518,13 @@ ESTILO DE RESPUESTA:
 
             avatarSynthesizer.startAvatarAsync(peerConnection).then((r) => {
                 if (r.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-                    updateStatus("🎤 Avatar listo - Diga TIC o TOC para activar");
+                    updateStatus("🎤 Avatar listo - Iniciando modo escucha");
                 } else {
-                    updateStatus("Error al iniciar avatar", true);
-                    if (r.reason === SpeechSDK.ResultReason.Canceled) {
-                        let cancellationDetails = SpeechSDK.CancellationDetails.fromResult(r);
-                        if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
-                            console.log("Error: " + cancellationDetails.errorDetails);
-                        }
-                    }
+                    updateStatus("Error al iniciar avatar", 'error');
                     startSessionBtn.disabled = false;
                 }
             }).catch((error) => {
-                updateStatus("Error al iniciar avatar: " + error, true);
+                updateStatus("Error al iniciar avatar: " + error, 'error');
                 startSessionBtn.disabled = false;
             });
         }
@@ -514,58 +537,34 @@ ESTILO DE RESPUESTA:
                 const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
                 continuousRecognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
 
-                // Estado para manejar el flujo de conversación
-                let isWaitingForResponse = false;
-                let currentQuestion = '';
-
                 // Reconocimiento en tiempo real
                 continuousRecognizer.recognizing = (s, e) => {
                     if (e.result.text.trim()) {
-                        transcriptionArea.value = `Escuchando: "${e.result.text}"`;
+                        // Mostrar texto temporal en transcripción
+                        transcriptionArea.value = fullTranscription + "\n[Escuchando: " + e.result.text + "]";
+                        transcriptionArea.scrollTop = transcriptionArea.scrollHeight;
                     }
                 };
 
-                // Reconocimiento finalizado
+                // Reconocimiento finalizado - agregar a transcripción completa
                 continuousRecognizer.recognized = async (s, e) => {
                     if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech && e.result.text.trim()) {
-                        const text = e.result.text.trim().toLowerCase();
-                        transcriptionArea.value = `Transcrito: "${e.result.text}"`;
-
-                        // Verificar palabras clave
-                        const containsWakeWord = wakeWords.some(word => text.includes(word));
-
-                        if (containsWakeWord && !isWaitingForResponse) {
-                            // Palabra de activación detectada
-                            updateStatus("🎯 Palabra clave detectada - Escuchando pregunta...");
-                            transcriptionArea.value = "¡Palabra clave detectada! Puede hacer su pregunta...";
-                            isWaitingForResponse = true;
-                            updateListeningIndicator(true);
-                            
-                        } else if (isWaitingForResponse && !containsWakeWord) {
-                            // Pregunta detectada
-                            currentQuestion = e.result.text.trim();
-                            transcriptionArea.value = `Pregunta: "${currentQuestion}"`;
-                            updateStatus("🧠 Procesando pregunta...");
-                            updateListeningIndicator(false);
-                            
-                            // Procesar con GPT-4
-                            try {
-                                const gptResponse = await getGPTResponse(currentQuestion);
-                                responseArea.value = gptResponse;
-                                
-                                // Hacer hablar al avatar
-                                await makeAvatarSpeak(gptResponse);
-                                
-                                // Resetear estado
-                                isWaitingForResponse = false;
-                                updateStatus("✅ Respuesta completada - Esperando TIC o TOC");
-                                transcriptionArea.value = "Esperando nueva activación con TIC o TOC...";
-                                
-                            } catch (error) {
-                                updateStatus("Error al procesar pregunta", true);
-                                isWaitingForResponse = false;
-                            }
+                        const newText = e.result.text.trim();
+                        
+                        // Agregar nueva frase a la transcripción completa
+                        if (fullTranscription) {
+                            fullTranscription += " " + newText;
+                        } else {
+                            fullTranscription = newText;
                         }
+                        
+                        // Actualizar display
+                        transcriptionArea.value = fullTranscription;
+                        transcriptionArea.scrollTop = transcriptionArea.scrollHeight;
+                        updateWordCount();
+                        
+                        console.log("Transcrito:", newText);
+                        console.log("Transcripción completa tiene", fullTranscription.split(' ').length, "palabras");
                     }
                 };
 
@@ -581,59 +580,77 @@ ESTILO DE RESPUESTA:
             return new Promise((resolve, reject) => {
                 const spokenSsml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='es-CO'><voice name='${config.ttsVoice}'>${htmlEncode(text)}</voice></speak>`;
                 
-                isSpeaking = true;
                 updateStatus("🗣️ Avatar hablando...");
                 
-                // Asegurar que el audio esté desmuteado
-                const audioElement = document.getElementById('audio');
-                if (audioElement) {
-                    audioElement.muted = false;
-                }
-                
                 avatarSynthesizer.speakSsmlAsync(spokenSsml).then((result) => {
-                    isSpeaking = false;
                     if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
                         console.log("✅ Avatar habló correctamente");
+                        updateStatus("🎧 Escuchando presentación...", 'listening');
                         resolve();
                     } else {
                         console.log("❌ Error en síntesis:", result.reason);
-                        if (result.reason === SpeechSDK.ResultReason.Canceled) {
-                            const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
-                            console.log("Detalles del error:", cancellationDetails.errorDetails);
-                        }
                         reject(new Error("Error en síntesis"));
                     }
                 }).catch(error => {
-                    isSpeaking = false;
                     console.log("❌ Error en avatar:", error);
                     reject(error);
                 });
             });
         }
 
-        // Iniciar escucha de palabra clave
-        function startWakeWordListening() {
-            if (!continuousRecognizer || isWakeWordListening) return;
+        // Iniciar escucha continua
+        function startContinuousListening() {
+            if (!continuousRecognizer || isListening) return;
             
             try {
-                continuousRecognizer.startContinuousRecognitionAsync();
-                isWakeWordListening = true;
-                updateListeningIndicator(false);
+                continuousRecognizer.startContinuousRecognitionAsync(() => {
+                    isListening = true;
+                    askQuestionBtn.disabled = false;
+                    updateListeningIndicator(true);
+                    updateStatus("🎧 Escuchando presentación...", 'listening');
+                    console.log("✅ Escucha continua iniciada");
+                }, (err) => {
+                    console.error('Error al iniciar escucha:', err);
+                    updateStatus("Error al iniciar escucha", 'error');
+                });
             } catch (error) {
                 console.error('Error al iniciar escucha:', error);
             }
         }
 
         // Detener escucha
-        function stopWakeWordListening() {
-            if (!continuousRecognizer || !isWakeWordListening) return;
+        function stopContinuousListening() {
+            if (!continuousRecognizer || !isListening) return;
             
             try {
-                continuousRecognizer.stopContinuousRecognitionAsync();
-                isWakeWordListening = false;
-                updateListeningIndicator(false);
+                continuousRecognizer.stopContinuousRecognitionAsync(() => {
+                    isListening = false;
+                    updateListeningIndicator(false);
+                    console.log("✅ Escucha detenida");
+                }, (err) => {
+                    console.error('Error al detener escucha:', err);
+                });
             } catch (error) {
                 console.error('Error al detener escucha:', error);
+            }
+        }
+
+        // Generar y hacer pregunta
+        async function askIntelligentQuestion() {
+            try {
+                askQuestionBtn.disabled = true;
+                
+                const question = await generateIntelligentQuestion();
+                responseArea.value = question;
+                
+                await makeAvatarSpeak(question);
+                
+                askQuestionBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('Error al generar pregunta:', error);
+                updateStatus("Error al generar pregunta", 'error');
+                askQuestionBtn.disabled = false;
             }
         }
 
@@ -647,7 +664,6 @@ ESTILO DE RESPUESTA:
                 const avatarConfig = new SpeechSDK.AvatarConfig(config.avatarCharacter, config.avatarStyle);
                 avatarSynthesizer = new SpeechSDK.AvatarSynthesizer(speechConfig, avatarConfig);
 
-                // Inicializar reconocimiento
                 if (!initializeContinuousRecognition()) {
                     throw new Error("No se pudo inicializar el reconocimiento de voz");
                 }
@@ -655,7 +671,12 @@ ESTILO DE RESPUESTA:
                 isSessionActive = true;
                 stopSessionBtn.disabled = false;
 
-                // Obtener token WebRTC
+                // Limpiar transcripción anterior
+                fullTranscription = "";
+                transcriptionArea.value = "";
+                responseArea.value = "";
+                updateWordCount();
+
                 const xhr = new XMLHttpRequest();
                 xhr.open("GET", `https://${config.region}.tts.speech.microsoft.com/cognitiveservices/avatar/relay/token/v1`);
                 xhr.setRequestHeader("Ocp-Apim-Subscription-Key", config.cogSvcSubKey);
@@ -665,7 +686,7 @@ ESTILO DE RESPUESTA:
                             const responseData = JSON.parse(this.responseText);
                             setupWebRTC(responseData.Urls[0], responseData.Username, responseData.Password);
                         } catch (error) {
-                            updateStatus("Error al obtener credenciales: " + error.message, true);
+                            updateStatus("Error al obtener credenciales: " + error.message, 'error');
                             startSessionBtn.disabled = false;
                         }
                     }
@@ -673,14 +694,14 @@ ESTILO DE RESPUESTA:
                 xhr.send();
 
             } catch (error) {
-                updateStatus("Error al iniciar: " + error.message, true);
+                updateStatus("Error al iniciar: " + error.message, 'error');
                 startSessionBtn.disabled = false;
             }
         }
 
         // Detener sesión
         function stopSession() {
-            stopWakeWordListening();
+            stopContinuousListening();
             
             if (avatarSynthesizer) {
                 avatarSynthesizer.close();
@@ -689,19 +710,25 @@ ESTILO DE RESPUESTA:
             isSessionActive = false;
             startSessionBtn.disabled = false;
             stopSessionBtn.disabled = true;
+            askQuestionBtn.disabled = true;
             
             updateStatus("🔴 Sesión finalizada");
-            transcriptionArea.value = "Sesión terminada";
-            responseArea.value = "Gracias por usar el asistente virtual de la Fiscalía General";
             updateListeningIndicator(false);
+            
+            // Mostrar resumen final
+            if (fullTranscription) {
+                const words = fullTranscription.trim().split(/\s+/).filter(word => word.length > 0);
+                responseArea.value = `Sesión finalizada. Se transcribieron ${words.length} palabras sobre la Estrategia de Transformación Digital de la Fiscalía.`;
+            }
         }
 
         // Event listeners
         startSessionBtn.addEventListener('click', startSession);
         stopSessionBtn.addEventListener('click', stopSession);
+        askQuestionBtn.addEventListener('click', askIntelligentQuestion);
 
         // Inicialización
-        updateStatus("🎭 Sistema listo - Presione 'Iniciar Avatar' para comenzar");
+        updateStatus("🎭 Sistema listo - Avatar IA preparado para escuchar");
     </script>
 </body>
 </html>
