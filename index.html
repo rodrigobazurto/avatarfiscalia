@@ -313,6 +313,16 @@
             </div>
 
             <div class="input-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enableWakeWord" checked>
+                    <label for="enableWakeWord">🎙️ Activar con palabra clave</label>
+                </div>
+                <small style="opacity: 0.8; font-size: 12px;">
+                    Palabras clave: "Oye Avatar", "Escucha Avatar", "Hola Avatar"
+                </small>
+            </div>
+
+            <div class="input-group">
                 <label for="transcription">📝 Transcripción en Tiempo Real:</label>
                 <textarea id="transcription" rows="2" readonly placeholder="La transcripción aparecerá aquí..."></textarea>
             </div>
@@ -396,9 +406,12 @@ Tu objetivo es educar sobre la transformación digital específica de la Fiscal�
         // Variables globales
         var avatarSynthesizer;
         var speechRecognizer;
+        var continuousRecognizer; // Para escucha continua de palabra clave
         var peerConnection;
         var previousAnimationFrameTimestamp = 0;
         var isListening = false;
+        var isWakeWordListening = false;
+        var wakeWords = ['oye avatar', 'escucha avatar', 'hola avatar', 'avatar escucha'];
 
         // Logger mejorado
         const log = msg => {
@@ -564,6 +577,9 @@ Tu objetivo es educar sobre la transformación digital específica de la Fiscal�
                 const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
                 speechRecognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
 
+                // Reconocedor para palabra clave (escucha continua)
+                continuousRecognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+
                 // Evento de reconocimiento en tiempo real
                 speechRecognizer.recognizing = (s, e) => {
                     if (e.result.text.trim()) {
@@ -585,6 +601,30 @@ Tu objetivo es educar sobre la transformación digital específica de la Fiscal�
                     }
                 };
 
+                // Reconocimiento continuo para palabra clave
+                continuousRecognizer.recognized = async (s, e) => {
+                    if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech && e.result.text.trim()) {
+                        const text = e.result.text.trim().toLowerCase();
+                        
+                        // Verificar si contiene palabra clave
+                        const containsWakeWord = wakeWords.some(wakeWord => text.includes(wakeWord));
+                        
+                        if (containsWakeWord) {
+                            log(`🎯 Palabra clave detectada: "${text}"`);
+                            
+                            // Detener cualquier síntesis en curso
+                            if (avatarSynthesizer && isSpeaking) {
+                                avatarSynthesizer.stopSpeakingAsync();
+                            }
+                            
+                            // Activar escucha activa automáticamente
+                            if (!isListening) {
+                                activateActiveListening();
+                            }
+                        }
+                    }
+                };
+
                 speechRecognizer.canceled = (s, e) => {
                     log(`Reconocimiento cancelado: ${e.reason}`);
                     if (e.reason === SpeechSDK.CancellationReason.Error) {
@@ -595,10 +635,61 @@ Tu objetivo es educar sobre la transformación digital específica de la Fiscal�
 
                 log("✅ Reconocimiento de voz inicializado correctamente");
                 
+                // Iniciar escucha de palabra clave si está habilitada
+                if (document.getElementById('enableWakeWord').checked) {
+                    startWakeWordListening();
+                }
+                
             } catch (error) {
                 log(`❌ Error al inicializar reconocimiento: ${error.message}`);
                 updateStatus(`Error en micrófono: ${error.message}`, true);
             }
+        }
+
+        // Iniciar escucha de palabra clave
+        function startWakeWordListening() {
+            if (!continuousRecognizer || isWakeWordListening) return;
+            
+            try {
+                continuousRecognizer.startContinuousRecognitionAsync();
+                isWakeWordListening = true;
+                log("🎙️ Escucha de palabra clave activada");
+                updateStatus("🎙️ Esperando palabra clave: 'Oye Avatar', 'Escucha Avatar'...");
+            } catch (error) {
+                log(`❌ Error al iniciar escucha de palabra clave: ${error.message}`);
+            }
+        }
+
+        // Detener escucha de palabra clave
+        function stopWakeWordListening() {
+            if (!continuousRecognizer || !isWakeWordListening) return;
+            
+            try {
+                continuousRecognizer.stopContinuousRecognitionAsync();
+                isWakeWordListening = false;
+                log("🔇 Escucha de palabra clave desactivada");
+            } catch (error) {
+                log(`❌ Error al detener escucha de palabra clave: ${error.message}`);
+            }
+        }
+
+        // Activar escucha activa automáticamente
+        function activateActiveListening() {
+            if (isListening) return;
+            
+            updateStatus("🎤 ¡Palabra clave detectada! Escuchando su pregunta...");
+            document.getElementById('transcription').value = '¡Palabra clave detectada! Puede hablar ahora...';
+            
+            // Simular click en botón de escuchar
+            window.startListening();
+            
+            // Auto-detener después de 15 segundos si no hay actividad
+            setTimeout(() => {
+                if (isListening) {
+                    window.stopListening();
+                    updateStatus("⏰ Tiempo de escucha terminado - Esperando palabra clave...");
+                }
+            }, 15000);
         }
 
         // Procesar entrada de voz y generar respuesta
@@ -609,11 +700,11 @@ Tu objetivo es educar sobre la transformación digital específica de la Fiscal�
                 // Generar respuesta GPT-4
                 const gptResponse = await getGPTResponse(userText);
                 
-                // Actualizar campo de texto
+                // Actualizar campo de texto con la respuesta
                 document.getElementById('spokenText').value = gptResponse;
                 
-                // Agregar a conversación
-                addToConversation('GPT-4', gptResponse);
+                // Agregar solo UNA vez a la conversación
+                addToConversation('Avatar IA', gptResponse);
                 
                 // Hacer que el avatar hable automáticamente
                 updateStatus("🎭 Avatar respondiendo...");
@@ -627,14 +718,14 @@ Tu objetivo es educar sobre la transformación digital específica de la Fiscal�
             }
         }
 
-        // Hacer hablar al avatar (versión async)
+        // Hacer hablar al avatar (versión async) - SIN agregar a conversación
         async function makeAvatarSpeak(text) {
             return new Promise((resolve, reject) => {
                 const ttsVoice = document.getElementById('ttsVoice').value;
                 const spokenSsml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='es-CO'><voice name='${ttsVoice}'>${htmlEncode(text)}</voice></speak>`;
                 
                 log("🗣️ Avatar comenzando a hablar...");
-                addToConversation('Avatar IA', text);
+                // NO agregar a conversación aquí - ya se agregó en processVoiceInput
                 
                 avatarSynthesizer.speakSsmlAsync(spokenSsml).then((result) => {
                     if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
@@ -717,7 +808,7 @@ Tu objetivo es educar sobre la transformación digital específica de la Fiscal�
             const spokenSsml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='es-CO'><voice name='${ttsVoice}'>${htmlEncode(spokenText)}</voice></speak>`;
             
             log("🗣️ Solicitud de habla enviada al avatar");
-            addToConversation('Avatar IA', spokenText);
+            // NO agregar a conversación aquí si ya está visible en el campo de texto
             
             avatarSynthesizer.speakSsmlAsync(spokenSsml).then((result) => {
                 document.getElementById('speak').disabled = false;
@@ -764,6 +855,9 @@ Tu objetivo es educar sobre la transformación digital específica de la Fiscal�
                 speechRecognizer.stopContinuousRecognitionAsync();
                 isListening = false;
             }
+            
+            // Detener escucha de palabra clave
+            stopWakeWordListening();
             
             if (avatarSynthesizer) {
                 avatarSynthesizer.close();
@@ -839,7 +933,7 @@ Tu objetivo es educar sobre la transformación digital específica de la Fiscal�
                 document.getElementById('spokenText').value = gptResponse;
                 
                 updateStatus("✅ Respuesta GPT-4 generada - Presione 'Hacer que el Avatar Hable'");
-                addToConversation('GPT-4', gptResponse);
+                addToConversation('Avatar IA', gptResponse);
                 
                 // Habilitar el botón de hablar
                 document.getElementById('speak').disabled = false;
@@ -859,6 +953,15 @@ Tu objetivo es educar sobre la transformación digital específica de la Fiscal�
         document.getElementById('addGPTResponse').addEventListener('click', window.addGPTResponse);
         document.getElementById('startListening').addEventListener('click', window.startListening);
         document.getElementById('stopListening').addEventListener('click', window.stopListening);
+
+        // Event listener para activar/desactivar palabra clave
+        document.getElementById('enableWakeWord').addEventListener('change', (e) => {
+            if (e.target.checked && isSessionActive) {
+                startWakeWordListening();
+            } else {
+                stopWakeWordListening();
+            }
+        });
 
         // Inicialización
         updateStatus("🎭 Sistema Avatar Real-Time preparado. Configure su clave de Azure Speech y presione 'Iniciar Sesión Avatar'.");
