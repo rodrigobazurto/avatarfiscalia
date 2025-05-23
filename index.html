@@ -34,7 +34,7 @@
 
         .header-content {
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             gap: 20px;
         }
 
@@ -625,6 +625,7 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
                 continuousRecognizer.recognized = async (s, e) => {
                     if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech && e.result.text.trim()) {
                         const newText = e.result.text.trim();
+                        console.log("Texto reconocido:", newText);
                         
                         // Verificar comandos de voz
                         const textLower = newText.toLowerCase();
@@ -633,14 +634,16 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
                         const luzPattern = /(?:^|\s|[.,;!?])\s*luz\s*(?:[.,;!?]|\s|$)/i;
                         const containsLuzCommand = luzPattern.test(textLower);
                         
-                        // Patrón para "Toc toc" (explicación) - Más flexible para captar variaciones
-                        const tocPattern = /(?:^|\s|[.,;!?])\s*(?:toc\s*toc|tok\s*tok|toque\s*toque)\s*(?:[.,;!?]|\s|$)/i;
-                        const containsTocCommand = tocPattern.test(textLower);
+                        // Patrón para "Toc toc" (explicación) - Simplificado
+                        const containsTocCommand = textLower.includes('toc') || textLower.includes('tok');
+                        
+                        console.log("¿Contiene Luz?", containsLuzCommand);
+                        console.log("¿Contiene Toc?", containsTocCommand);
                         
                         if ((containsLuzCommand || containsTocCommand) && !isProcessingQuestion) {
                             isProcessingQuestion = true;
                             
-                            if (containsLuzCommand) {
+                            if (containsLuzCommand && !containsTocCommand) {
                                 updateStatus("🎯 Comando 'Luz' detectado - Generando pregunta inteligente...");
                                 
                                 // Limpiar comando de la transcripción
@@ -666,9 +669,10 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
                                 
                             } else if (containsTocCommand) {
                                 updateStatus("🎯 Comando 'Toc toc' detectado - Generando explicación...");
+                                console.log("Procesando comando Toc toc...");
                                 
-                                // Limpiar comando de la transcripción - patrón más amplio
-                                const textWithoutCommand = newText.replace(/(?:^|\s|[.,;!?])\s*(?:toc\s*toc|tok\s*tok|toque\s*toque)\s*(?:[.,;!?]|\s|$)/gi, ' ').trim();
+                                // Limpiar comando de la transcripción
+                                const textWithoutCommand = newText.replace(/toc|tok/gi, '').trim();
                                 if (textWithoutCommand) {
                                     if (fullTranscription) {
                                         fullTranscription += " " + textWithoutCommand;
@@ -679,7 +683,9 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
                                 
                                 // Generar explicación
                                 try {
+                                    console.log("Llamando a generateIntelligentExplanation...");
                                     const explanation = await generateIntelligentExplanation();
+                                    console.log("Explicación generada:", explanation);
                                     responseArea.value = explanation;
                                     await makeAvatarSpeak(explanation);
                                     updateStatus("✅ Explicación proporcionada - Continuando escucha", 'listening');
