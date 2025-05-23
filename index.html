@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: linear-gradient(135deg, #003f7f 0%, #0056b3 100%);
             color: white;
             height: 100vh;
             display: flex;
@@ -22,23 +22,61 @@
         }
 
         .header {
-            background: rgba(255,255,255,0.1);
-            padding: 15px;
-            text-align: center;
+            background: linear-gradient(90deg, #003f7f 0%, #0056b3 100%);
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.2);
+            border-bottom: 2px solid #ffd700;
             flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
 
-        .header h1 {
-            font-size: 1.8em;
-            margin-bottom: 3px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
 
-        .header p {
+        .logo-fiscalia {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .header-content h1 {
+            font-size: 2.2em;
+            margin: 0;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-weight: bold;
+        }
+
+        .header-content .subtitle {
+            font-size: 1.1em;
+            color: #ffd700;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .header-content .tagline {
             font-size: 0.9em;
-            opacity: 0.9;
+            color: rgba(255,255,255,0.9);
+            margin: 2px 0 0 0;
+            font-style: italic;
+        }
+
+        .escudo-colombia {
+            width: 50px;
+            height: 60px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120"><rect fill="%23FFD700" width="100" height="40"/><rect fill="%230038A8" y="40" width="100" height="40"/><rect fill="%23CE1126" y="80" width="100" height="40"/></svg>') no-repeat center;
+            background-size: contain;
         }
 
         .main-container {
@@ -109,13 +147,13 @@
 
         .transcription-box h3, .response-box h3 {
             margin-bottom: 8px;
-            color: #4CAF50;
+            color: #ffd700;
             font-size: 0.85em;
             font-weight: bold;
         }
 
         .response-box h3 {
-            color: #2196F3;
+            color: #87CEEB;
         }
 
         textarea {
@@ -138,12 +176,12 @@
 
         textarea:focus {
             outline: none;
-            border-color: #4CAF50;
-            box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+            border-color: #ffd700;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
         }
 
         .button {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
+            background: linear-gradient(45deg, #0056b3, #003f7f);
             border: none;
             color: white;
             padding: 12px 20px;
@@ -153,12 +191,13 @@
             font-size: 14px;
             font-weight: bold;
             transition: all 0.3s ease;
-            box-shadow: 0 3px 12px rgba(76, 175, 80, 0.3);
+            box-shadow: 0 3px 12px rgba(0, 86, 179, 0.3);
         }
 
         .button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 5px 15px rgba(0, 86, 179, 0.4);
+            background: linear-gradient(45deg, #0066cc, #004499);
         }
 
         .button:disabled {
@@ -191,7 +230,7 @@
             margin: 5px 0;
             border-radius: 8px;
             background: rgba(255,255,255,0.1);
-            border-left: 3px solid #4CAF50;
+            border-left: 3px solid #ffd700;
             font-weight: bold;
             font-size: 11px;
             text-align: center;
@@ -203,8 +242,8 @@
         }
 
         .status.listening {
-            border-left-color: #2196F3;
-            background: rgba(33, 150, 243, 0.1);
+            border-left-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
         }
 
         .wake-word-info {
@@ -214,11 +253,11 @@
             margin: 5px 0;
             text-align: center;
             font-size: 11px;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255, 215, 0, 0.3);
         }
 
         .wake-word-highlight {
-            color: #4CAF50;
+            color: #ffd700;
             font-weight: bold;
             font-size: 13px;
         }
@@ -227,7 +266,7 @@
             display: inline-block;
             width: 10px;
             height: 10px;
-            background: #4CAF50;
+            background: #ffd700;
             border-radius: 50%;
             margin-right: 6px;
             animation: pulse 1.5s infinite;
@@ -288,8 +327,24 @@
 </head>
 <body>
     <div class="header">
-        <h1>🏛️ Fiscalía General de la Nación</h1>
-        <p>Asistente IA que Escucha y Pregunta sobre su Presentación</p>
+        <div class="header-left">
+            <div class="logo-fiscalia">
+                <svg width="50" height="50" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <rect fill="#003f7f" width="100" height="100" rx="10"/>
+                    <rect fill="#ffd700" x="15" y="20" width="70" height="8" rx="4"/>
+                    <rect fill="#ffd700" x="15" y="35" width="70" height="8" rx="4"/>
+                    <rect fill="#ffd700" x="15" y="50" width="70" height="8" rx="4"/>
+                    <circle fill="#ffd700" cx="50" cy="75" r="12"/>
+                    <path fill="#003f7f" d="M45 70 L50 65 L55 70 L50 80 Z"/>
+                </svg>
+            </div>
+            <div class="header-content">
+                <h1>LUZ</h1>
+                <p class="subtitle">Asistente IA • Fiscalía General de la Nación</p>
+                <p class="tagline">"La justicia se ilumina con inteligencia artificial"</p>
+            </div>
+        </div>
+        <div class="escudo-colombia"></div>
     </div>
 
     <div class="main-container">
@@ -500,7 +555,7 @@ RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adiciona
                     updateStatus("✅ Avatar conectado - Comenzando escucha automática");
                     
                     setTimeout(() => {
-                        const welcomeMessage = "Buenos días, Señora Fiscal. Soy su asistente de inteligencia artificial especializado en Transformación Digital. Estoy listo para escuchar su presentación. Cuando desee que le haga una pregunta inteligente, simplemente diga la palabra LUZ.";
+                        const welcomeMessage = "Buenos días, Señora Fiscal. Soy LUZ, su asistente de inteligencia artificial especializado en Transformación Digital de la Fiscalía General de la Nación. Estoy lista para escuchar su presentación. Cuando desee que le haga una pregunta inteligente, simplemente diga mi nombre: LUZ.";
                         responseArea.value = welcomeMessage;
                         makeAvatarSpeak(welcomeMessage).then(() => {
                             startContinuousListening();
