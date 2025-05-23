@@ -315,8 +315,8 @@
                 </div>
                 
                 <div class="wake-word-info">
-                    <div>🎤 <span class="wake-word-highlight">Escuchando continuamente</span></div>
-                    <small>Para activar, diga: "Luz" al inicio de su frase</small>
+                    <div>🎤 <span class="wake-word-highlight">Comandos de voz disponibles</span></div>
+                    <small><strong>"Luz"</strong> = Pregunta • <strong>"Toc toc"</strong> = Explicación</small>
                 </div>
                 
                 <div id="status" class="status">Sistema listo. Presione 'Iniciar Avatar' para comenzar</div>
@@ -354,10 +354,11 @@
 
 TU FUNCIÓN PRINCIPAL:
 - Analizar el contenido transcrito de la presentación de la Fiscal
-- Generar preguntas inteligentes, relevantes y profesionales sobre lo expuesto
+- Generar preguntas inteligentes, relevantes y profesionales sobre lo expuesto (comando "Luz")
+- Proporcionar explicaciones detalladas y profundizaciones sobre temas específicos (comando "Toc toc")
 - Hacer preguntas que demuestren comprensión profunda del tema
 - Solicitar aclaraciones sobre puntos específicos mencionados
-- Preguntar sobre implementación práctica de los conceptos expuestos
+- Explicar conceptos complejos de manera clara y accesible
 
 CONOCIMIENTO BASE DE LA FISCALÍA:
 - Direccionamiento Estratégico 2024-2028: "Experiencia e innovación al servicio de la justicia"
@@ -366,22 +367,31 @@ CONOCIMIENTO BASE DE LA FISCALÍA:
 - Proyectos clave: SPOA 2, SGDEA, expediente electrónico, laboratorio de innovación
 - Marco normativo: Resolución 0412/2024
 
-TIPOS DE PREGUNTAS A GENERAR:
+TIPOS DE RESPUESTAS SEGÚN COMANDO:
+
+PARA "LUZ" (PREGUNTAS):
 1. Preguntas de profundización: "¿Podría explicar más sobre [tema específico mencionado]?"
 2. Preguntas de implementación: "¿Cómo se implementará concretamente [proyecto mencionado]?"
 3. Preguntas de integración: "¿Cómo se relaciona [tema A] con [tema B] que mencionó?"
 4. Preguntas de impacto: "¿Cuál será el impacto específico de [iniciativa] en los fiscales?"
 5. Preguntas de cronograma: "¿Cuáles son los tiempos estimados para [proyecto]?"
 
-ESTILO DE PREGUNTAS:
+PARA "TOC TOC" (EXPLICACIONES):
+1. Explicaciones técnicas: Detallar cómo funcionan los sistemas mencionados
+2. Contexto histórico: Explicar antecedentes y evolución de los proyectos
+3. Beneficios específicos: Detallar ventajas concretas para la Fiscalía
+4. Comparaciones: Explicar diferencias con sistemas anteriores
+5. Implementación práctica: Describir pasos concretos de ejecución
+
+ESTILO DE RESPUESTAS:
 - Formal pero conversacional
 - Específicas basadas en lo realmente dicho
-- Máximo 80 palabras por pregunta
-- Una sola pregunta por vez
+- Máximo 120 palabras por respuesta
+- Una sola respuesta por vez
 - Que demuestren escucha activa e inteligente
-- Sin emojis en las preguntas
+- Sin emojis en las respuestas
 
-RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adicionales.`,
+RESPONDE SOLO con la pregunta o explicación directa, sin preámbulos ni explicaciones adicionales.`,
             sttLocale: "es-CO",
             ttsVoice: "es-CO-SalomeNeural",
             avatarCharacter: "Meg",
@@ -442,7 +452,7 @@ RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adiciona
                     body: JSON.stringify({
                         messages: [
                             { role: "system", content: config.systemPrompt },
-                            { role: "user", content: `Analiza esta transcripción de la presentación de la Fiscal y genera UNA pregunta inteligente y específica basada en lo que ha expuesto:\n\n"${fullTranscription}"` }
+                            { role: "user", content: `COMANDO: LUZ (generar pregunta)\n\nAnaliza esta transcripción de la presentación de la Fiscal y genera UNA pregunta inteligente y específica basada en lo que ha expuesto:\n\n"${fullTranscription}"` }
                         ],
                         max_tokens: 150,
                         temperature: 0.8
@@ -458,6 +468,43 @@ RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adiciona
             } catch (error) {
                 console.error('Error OpenAI:', error);
                 return "Disculpe, Señora Fiscal, ¿podría repetir el último punto que mencionó?";
+            }
+        }
+
+        // Generar explicación inteligente basada en la transcripción
+        async function generateIntelligentExplanation() {
+            if (!fullTranscription.trim()) {
+                return "Señora Fiscal, estoy lista para proporcionar explicaciones detalladas sobre los temas que exponga.";
+            }
+
+            try {
+                updateStatus("🧠 Analizando contenido y generando explicación...");
+                
+                const response = await fetch(`${config.azureOpenAIEndpoint}openai/deployments/${config.azureOpenAIDeploymentName}/chat/completions?api-version=${config.azureOpenAIApiVersion}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'api-key': config.azureOpenAIApiKey
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            { role: "system", content: config.systemPrompt },
+                            { role: "user", content: `COMANDO: TOC TOC (generar explicación)\n\nAnaliza esta transcripción de la presentación de la Fiscal y proporciona UNA explicación detallada, profundización o contexto adicional sobre el tema más reciente o relevante mencionado:\n\n"${fullTranscription}"` }
+                        ],
+                        max_tokens: 180,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content.trim();
+            } catch (error) {
+                console.error('Error OpenAI:', error);
+                return "Disculpe, Señora Fiscal, ¿sobre qué tema específico le gustaría que proporcione más detalles?";
             }
         }
 
@@ -506,7 +553,7 @@ RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adiciona
                     updateStatus("✅ Avatar conectado - Comenzando escucha automática");
                     
                     setTimeout(() => {
-                        const welcomeMessage = "Buenos días, Señora Fiscal. Soy Luz, su asistente de inteligencia artificial especializado en Transformación Digital de la Fiscalía General de la Nación. Estoy lista para escuchar su presentación. Cuando desee que le haga una pregunta inteligente, simplemente diga mi nombre: Luz.";
+                        const welcomeMessage = "Buenos días, Señora Fiscal. Soy Luz, su asistente de inteligencia artificial especializado en Transformación Digital de la Fiscalía General de la Nación. Estoy lista para escuchar su presentación. Puede usar dos comandos: diga 'Luz' para que le haga una pregunta, o 'Toc toc' para que le proporcione una explicación detallada sobre algún tema.";
                         responseArea.value = welcomeMessage;
                         makeAvatarSpeak(welcomeMessage).then(() => {
                             startContinuousListening();
@@ -558,42 +605,73 @@ RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adiciona
                     if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech && e.result.text.trim()) {
                         const newText = e.result.text.trim();
                         
-                        // Verificar si contiene la palabra clave "Luz" de forma más específica
-                        // Solo activar si "Luz" aparece al inicio de la frase o después de una pausa
+                        // Verificar comandos de voz
                         const textLower = newText.toLowerCase();
+                        
+                        // Patrón para "Luz" (pregunta)
                         const luzPattern = /(?:^|\s|[.,;!?])\s*luz\s*(?:[.,;!?]|\s|$)/i;
                         const containsLuzCommand = luzPattern.test(textLower);
                         
-                        if (containsLuzCommand && !isProcessingQuestion) {
-                            // Activación por palabra clave Luz detectada
+                        // Patrón para "Toc toc" (explicación)
+                        const tocPattern = /(?:^|\s|[.,;!?])\s*toc\s+toc\s*(?:[.,;!?]|\s|$)/i;
+                        const containsTocCommand = tocPattern.test(textLower);
+                        
+                        if ((containsLuzCommand || containsTocCommand) && !isProcessingQuestion) {
                             isProcessingQuestion = true;
-                            updateStatus("🎯 Comando 'Luz' detectado - Generando pregunta inteligente...");
                             
-                            // No agregar "Luz" como comando a la transcripción, solo el contexto útil
-                            const textWithoutLuzCommand = newText.replace(/(?:^|\s|[.,;!?])\s*luz\s*(?:[.,;!?]|\s|$)/gi, ' ').trim();
-                            if (textWithoutLuzCommand) {
-                                if (fullTranscription) {
-                                    fullTranscription += " " + textWithoutLuzCommand;
-                                } else {
-                                    fullTranscription = textWithoutLuzCommand;
+                            if (containsLuzCommand) {
+                                updateStatus("🎯 Comando 'Luz' detectado - Generando pregunta inteligente...");
+                                
+                                // Limpiar comando de la transcripción
+                                const textWithoutCommand = newText.replace(/(?:^|\s|[.,;!?])\s*luz\s*(?:[.,;!?]|\s|$)/gi, ' ').trim();
+                                if (textWithoutCommand) {
+                                    if (fullTranscription) {
+                                        fullTranscription += " " + textWithoutCommand;
+                                    } else {
+                                        fullTranscription = textWithoutCommand;
+                                    }
                                 }
-                            }
-                            
-                            // Generar y hacer pregunta automáticamente
-                            try {
-                                const question = await generateIntelligentQuestion();
-                                responseArea.value = question;
-                                await makeAvatarSpeak(question);
-                                updateStatus("✅ Pregunta realizada - Continuando escucha", 'listening');
-                            } catch (error) {
-                                console.error('Error al generar pregunta automática:', error);
-                                updateStatus("Error al generar pregunta", 'error');
+                                
+                                // Generar pregunta
+                                try {
+                                    const question = await generateIntelligentQuestion();
+                                    responseArea.value = question;
+                                    await makeAvatarSpeak(question);
+                                    updateStatus("✅ Pregunta realizada - Continuando escucha", 'listening');
+                                } catch (error) {
+                                    console.error('Error al generar pregunta:', error);
+                                    updateStatus("Error al generar pregunta", 'error');
+                                }
+                                
+                            } else if (containsTocCommand) {
+                                updateStatus("🎯 Comando 'Toc toc' detectado - Generando explicación...");
+                                
+                                // Limpiar comando de la transcripción
+                                const textWithoutCommand = newText.replace(/(?:^|\s|[.,;!?])\s*toc\s+toc\s*(?:[.,;!?]|\s|$)/gi, ' ').trim();
+                                if (textWithoutCommand) {
+                                    if (fullTranscription) {
+                                        fullTranscription += " " + textWithoutCommand;
+                                    } else {
+                                        fullTranscription = textWithoutCommand;
+                                    }
+                                }
+                                
+                                // Generar explicación
+                                try {
+                                    const explanation = await generateIntelligentExplanation();
+                                    responseArea.value = explanation;
+                                    await makeAvatarSpeak(explanation);
+                                    updateStatus("✅ Explicación proporcionada - Continuando escucha", 'listening');
+                                } catch (error) {
+                                    console.error('Error al generar explicación:', error);
+                                    updateStatus("Error al generar explicación", 'error');
+                                }
                             }
                             
                             isProcessingQuestion = false;
                             
                         } else {
-                            // Texto normal - agregar a transcripción completa (incluso si contiene "luz" en contexto)
+                            // Texto normal - agregar a transcripción completa
                             if (fullTranscription) {
                                 fullTranscription += " " + newText;
                             } else {
