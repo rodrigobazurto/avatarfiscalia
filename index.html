@@ -395,57 +395,46 @@
             try {
                 updateStatus("Iniciando sesión del avatar...");
                 
+                // Habilitar controles inmediatamente para modo texto
+                isSessionActive = true;
+                startSessionBtn.disabled = true;
+                stopSessionBtn.disabled = false;
+                sendTextBtn.disabled = false;
+                
+                updateStatus("Sesión activa (modo texto) - Puede escribir preguntas");
+                addToConversation('Sistema', 'Sesión iniciada. ¡Hola! Soy su asistente virtual para la Transformación Digital de la Fiscalía General. ¿En qué puedo ayudarle?');
+                
+                // Intentar inicializar avatar en paralelo
                 const initialized = await initializeAvatar();
-                if (!initialized) return;
-
-                // Conectar video del avatar
-                avatarSynthesizer.startAvatarAsync(
-                    (result) => {
-                        console.log("Avatar start result:", result);
-                        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioStarted) {
-                            console.log("Avatar started successfully");
-                            if (result.stream) {
-                                avatarVideo.srcObject = result.stream;
-                                avatarVideo.play().catch(e => console.log("Video play error:", e));
+                if (initialized) {
+                    // Conectar video del avatar
+                    avatarSynthesizer.startAvatarAsync(
+                        (result) => {
+                            console.log("Avatar start result:", result);
+                            if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioStarted) {
+                                console.log("Avatar started successfully");
+                                if (result.stream) {
+                                    avatarVideo.srcObject = result.stream;
+                                    avatarVideo.play().catch(e => console.log("Video play error:", e));
+                                }
+                                
+                                updateStatus("Sesión activa con avatar - Puede hacer preguntas por texto o voz");
+                                startListeningBtn.disabled = false;
+                                
+                                addToConversation('Sistema', 'Avatar visual activado correctamente');
+                            } else {
+                                console.log("Avatar start failed, reason:", result.reason);
+                                updateStatus("Sesión activa (modo texto/audio) - Avatar visual no disponible");
                             }
-                            
-                            isSessionActive = true;
-                            updateStatus("Sesión activa - Puede hacer preguntas");
-                            
-                            // Actualizar controles
-                            startSessionBtn.disabled = true;
-                            stopSessionBtn.disabled = false;
-                            sendTextBtn.disabled = false;
-                            startListeningBtn.disabled = false;
-                            
-                            addToConversation('Sistema', 'Sesión iniciada. ¡Hola! Soy su asistente virtual para la Transformación Digital de la Fiscalía General. ¿En qué puedo ayudarle?');
-                        } else {
-                            console.log("Avatar start failed, reason:", result.reason);
-                            // Activar sesión sin video para permitir solo audio
-                            isSessionActive = true;
-                            updateStatus("Sesión activa (solo audio) - Puede hacer preguntas");
-                            
-                            startSessionBtn.disabled = true;
-                            stopSessionBtn.disabled = false;
-                            sendTextBtn.disabled = false;
-                            startListeningBtn.disabled = false;
-                            
-                            addToConversation('Sistema', 'Avatar en modo audio. ¡Hola! Soy su asistente virtual para la Transformación Digital de la Fiscalía General. ¿En qué puedo ayudarle?');
+                        },
+                        (error) => {
+                            console.log("Avatar start error:", error);
+                            updateStatus("Sesión activa (modo texto) - Avatar visual no disponible");
                         }
-                    },
-                    (error) => {
-                        console.log("Avatar start error:", error);
-                        // Activar sesión en modo texto como fallback
-                        isSessionActive = true;
-                        updateStatus("Sesión activa (modo texto) - Puede escribir preguntas");
-                        
-                        startSessionBtn.disabled = true;
-                        stopSessionBtn.disabled = false;
-                        sendTextBtn.disabled = false;
-                        
-                        addToConversation('Sistema', 'Avatar en modo texto. ¡Hola! Soy su asistente virtual para la Transformación Digital de la Fiscalía General. ¿En qué puedo ayudarle?');
-                    }
-                );
+                    );
+                } else {
+                    updateStatus("Sesión activa (solo texto) - Servicios de voz no disponibles");
+                }
             } catch (error) {
                 updateStatus(`Error al iniciar sesión: ${error.message}`, true);
             }
