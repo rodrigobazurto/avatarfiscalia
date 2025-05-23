@@ -272,15 +272,15 @@
                 <div class="input-group">
                     <label for="region">Región:</label>
                     <select id="region">
-                        <option value="eastus2" selected>East US 2</option>
-                        <option value="westus2">West US 2</option>
+                        <option value="westus2" selected>West US 2</option>
+                        <option value="eastus2">East US 2</option>
                         <option value="westeurope">West Europe</option>
                         <option value="southeastasia">Southeast Asia</option>
                     </select>
                 </div>
                 <div class="input-group">
                     <label for="subscriptionKey">Subscription Key:</label>
-                    <input id="subscriptionKey" type="password" value="1de1c139475db9fb1f4c4abfdf578a0" placeholder="Su clave de suscripción...">
+                    <input id="subscriptionKey" type="password" value="1de1c13947f34b9fb1f4c4abfdf578a0" placeholder="Su clave de suscripción...">
                 </div>
             </div>
 
@@ -500,7 +500,7 @@ Proporciona respuestas expertas sobre cómo la tecnología mejora la eficiencia,
             const cogSvcRegion = document.getElementById('region').value;
             const cogSvcSubKey = document.getElementById('subscriptionKey').value;
             
-            if (cogSvcSubKey === '' || cogSvcSubKey === '1de1c139475db9fb1f4c4abfdf578a0') {
+            if (cogSvcSubKey === '') {
                 updateStatus("⚠️ Por favor configure su clave de suscripción de Azure Speech", true);
                 return;
             }
