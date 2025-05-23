@@ -307,6 +307,16 @@
                 <button id="addGPTResponse" class="button mic-button">🧠 Agregar Respuesta GPT-4</button>
             </div>
 
+            <div class="input-group">
+                <button id="startListening" class="button mic-button" disabled>🎤 ESCUCHAR y RESPONDER</button>
+                <button id="stopListening" class="button" disabled>⏹️ Parar Micrófono</button>
+            </div>
+
+            <div class="input-group">
+                <label for="transcription">📝 Transcripción en Tiempo Real:</label>
+                <textarea id="transcription" rows="2" readonly placeholder="La transcripción aparecerá aquí..."></textarea>
+            </div>
+
             <div id="status" class="status">Sistema listo. Configure las credenciales y presione "Iniciar Sesión Avatar".</div>
 
             <div id="logging"></div>
@@ -346,8 +356,10 @@ Proporciona respuestas expertas sobre cómo la tecnología mejora la eficiencia,
 
         // Variables globales
         var avatarSynthesizer;
+        var speechRecognizer;
         var peerConnection;
         var previousAnimationFrameTimestamp = 0;
+        var isListening = false;
 
         // Logger mejorado
         const log = msg => {
@@ -448,7 +460,11 @@ Proporciona respuestas expertas sobre cómo la tecnología mejora la eficiencia,
                     document.getElementById('stopSession').disabled = false;
                     document.getElementById('speak').disabled = false;
                     document.getElementById('addGPTResponse').disabled = false;
+                    document.getElementById('startListening').disabled = false;
                     updateStatus("✅ Sesión avatar activa - Sistema completo funcionando");
+                    
+                    // Inicializar reconocimiento de voz
+                    initializeSpeechRecognition();
                 }
 
                 if (peerConnection.iceConnectionState === 'disconnected' || peerConnection.iceConnectionState === 'failed') {
@@ -456,6 +472,8 @@ Proporciona respuestas expertas sobre cómo la tecnología mejora la eficiencia,
                     document.getElementById('stopSpeaking').disabled = true;
                     document.getElementById('stopSession').disabled = true;
                     document.getElementById('addGPTResponse').disabled = true;
+                    document.getElementById('startListening').disabled = true;
+                    document.getElementById('stopListening').disabled = true;
                     document.getElementById('startSession').disabled = false;
                     updateStatus("❌ Conexión perdida - Presione 'Iniciar Sesión' para reconectar", true);
                 }
@@ -493,6 +511,109 @@ Proporciona respuestas expertas sobre cómo la tecnología mejora la eficiencia,
                 "'": '&#39;', '/': '&#x2F;'
             };
             return String(text).replace(/[&<>"'\/]/g, (match) => entityMap[match]);
+        }
+
+        // Inicializar reconocimiento de voz
+        function initializeSpeechRecognition() {
+            try {
+                const cogSvcRegion = document.getElementById('region').value;
+                const cogSvcSubKey = document.getElementById('subscriptionKey').value;
+                
+                const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(cogSvcSubKey, cogSvcRegion);
+                speechConfig.speechRecognitionLanguage = "es-CO";
+                
+                const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+                speechRecognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+
+                // Evento de reconocimiento en tiempo real
+                speechRecognizer.recognizing = (s, e) => {
+                    if (e.result.text.trim()) {
+                        document.getElementById('transcription').value = `Escuchando: "${e.result.text}"`;
+                    }
+                };
+
+                // Evento de reconocimiento finalizado
+                speechRecognizer.recognized = async (s, e) => {
+                    if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech && e.result.text.trim()) {
+                        const recognizedText = e.result.text.trim();
+                        document.getElementById('transcription').value = `Transcrito: "${recognizedText}"`;
+                        
+                        // Agregar a conversación
+                        addToConversation('Usuario (Voz)', recognizedText);
+                        
+                        // Procesar automáticamente con GPT-4
+                        await processVoiceInput(recognizedText);
+                    }
+                };
+
+                speechRecognizer.canceled = (s, e) => {
+                    log(`Reconocimiento cancelado: ${e.reason}`);
+                    if (e.reason === SpeechSDK.CancellationReason.Error) {
+                        log(`Error: ${e.errorDetails}`);
+                        updateStatus(`Error en reconocimiento: ${e.errorDetails}`, true);
+                    }
+                };
+
+                log("✅ Reconocimiento de voz inicializado correctamente");
+                
+            } catch (error) {
+                log(`❌ Error al inicializar reconocimiento: ${error.message}`);
+                updateStatus(`Error en micrófono: ${error.message}`, true);
+            }
+        }
+
+        // Procesar entrada de voz y generar respuesta
+        async function processVoiceInput(userText) {
+            try {
+                updateStatus("🧠 Procesando con GPT-4 y preparando respuesta del avatar...");
+                
+                // Generar respuesta GPT-4
+                const gptResponse = await getGPTResponse(userText);
+                
+                // Actualizar campo de texto
+                document.getElementById('spokenText').value = gptResponse;
+                
+                // Agregar a conversación
+                addToConversation('GPT-4', gptResponse);
+                
+                // Hacer que el avatar hable automáticamente
+                updateStatus("🎭 Avatar respondiendo...");
+                await makeAvatarSpeak(gptResponse);
+                
+                updateStatus("✅ Conversación completa - Listo para siguiente pregunta");
+                
+            } catch (error) {
+                log(`❌ Error en procesamiento: ${error.message}`);
+                updateStatus(`Error: ${error.message}`, true);
+            }
+        }
+
+        // Hacer hablar al avatar (versión async)
+        async function makeAvatarSpeak(text) {
+            return new Promise((resolve, reject) => {
+                const ttsVoice = document.getElementById('ttsVoice').value;
+                const spokenSsml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='es-CO'><voice name='${ttsVoice}'>${htmlEncode(text)}</voice></speak>`;
+                
+                log("🗣️ Avatar comenzando a hablar...");
+                addToConversation('Avatar IA', text);
+                
+                avatarSynthesizer.speakSsmlAsync(spokenSsml).then((result) => {
+                    if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+                        log(`✅ Avatar completó respuesta`);
+                        resolve();
+                    } else {
+                        log(`❌ Error en síntesis: ${result.resultId}`);
+                        if (result.reason === SpeechSDK.ResultReason.Canceled) {
+                            const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
+                            log(`Error: ${cancellationDetails.errorDetails}`);
+                        }
+                        reject(new Error("Error en síntesis"));
+                    }
+                }).catch(error => {
+                    log(`❌ Error en avatar: ${error}`);
+                    reject(error);
+                });
+            });
         }
 
         // Iniciar sesión
@@ -595,7 +716,15 @@ Proporciona respuestas expertas sobre cómo la tecnología mejora la eficiencia,
             document.getElementById('stopSession').disabled = true;
             document.getElementById('stopSpeaking').disabled = true;
             document.getElementById('addGPTResponse').disabled = true;
+            document.getElementById('startListening').disabled = true;
+            document.getElementById('stopListening').disabled = true;
             document.getElementById('startSession').disabled = false;
+            
+            // Detener reconocimiento si está activo
+            if (speechRecognizer && isListening) {
+                speechRecognizer.stopContinuousRecognitionAsync();
+                isListening = false;
+            }
             
             if (avatarSynthesizer) {
                 avatarSynthesizer.close();
@@ -603,6 +732,53 @@ Proporciona respuestas expertas sobre cómo la tecnología mejora la eficiencia,
             
             updateStatus("🔴 Sesión avatar terminada");
             addToConversation('Sistema', 'Sesión del avatar finalizada. Gracias por usar el asistente de Transformación Digital.');
+        };
+
+        // Iniciar escucha continua
+        window.startListening = () => {
+            if (!speechRecognizer) {
+                updateStatus("❌ Reconocimiento de voz no disponible", true);
+                return;
+            }
+
+            if (isListening) return;
+
+            try {
+                speechRecognizer.startContinuousRecognitionAsync();
+                isListening = true;
+                
+                document.getElementById('startListening').disabled = true;
+                document.getElementById('stopListening').disabled = false;
+                document.getElementById('transcription').value = '';
+                
+                updateStatus("🎤 Escuchando... Hable ahora y el avatar responderá automáticamente");
+                log("🎤 Iniciando escucha continua...");
+                
+            } catch (error) {
+                updateStatus(`Error al iniciar micrófono: ${error.message}`, true);
+                log(`❌ Error: ${error.message}`);
+            }
+        };
+
+        // Detener escucha
+        window.stopListening = () => {
+            if (!speechRecognizer || !isListening) return;
+
+            try {
+                speechRecognizer.stopContinuousRecognitionAsync();
+                isListening = false;
+                
+                document.getElementById('startListening').disabled = false;
+                document.getElementById('stopListening').disabled = true;
+                document.getElementById('transcription').value = 'Micrófono desactivado';
+                
+                updateStatus("🔴 Micrófono desactivado");
+                log("🔴 Escucha detenida");
+                
+            } catch (error) {
+                updateStatus(`Error al detener micrófono: ${error.message}`, true);
+                log(`❌ Error: ${error.message}`);
+            }
         };
 
         // Agregar respuesta GPT-4
@@ -642,6 +818,8 @@ Proporciona respuestas expertas sobre cómo la tecnología mejora la eficiencia,
         document.getElementById('stopSpeaking').addEventListener('click', window.stopSpeaking);
         document.getElementById('stopSession').addEventListener('click', window.stopSession);
         document.getElementById('addGPTResponse').addEventListener('click', window.addGPTResponse);
+        document.getElementById('startListening').addEventListener('click', window.startListening);
+        document.getElementById('stopListening').addEventListener('click', window.stopListening);
 
         // Inicialización
         updateStatus("🎭 Sistema Avatar Real-Time preparado. Configure su clave de Azure Speech y presione 'Iniciar Sesión Avatar'.");
