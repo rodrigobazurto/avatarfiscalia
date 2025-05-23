@@ -2,14 +2,17 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Avatar Conversacional - Fiscalía General de la Nación</title>
     <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
             min-height: 100vh;
@@ -26,14 +29,12 @@
         }
 
         .header h1 {
-            margin: 0;
             font-size: 2.5em;
-            font-weight: bold;
+            margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .header p {
-            margin: 10px 0 0 0;
+        .subtitle {
             font-size: 1.2em;
             opacity: 0.9;
         }
@@ -46,7 +47,6 @@
             max-width: 1400px;
             margin: 0 auto;
             width: 100%;
-            box-sizing: border-box;
         }
 
         .avatar-section {
@@ -68,83 +68,38 @@
             height: fit-content;
         }
 
-        .avatar-display {
-            width: 100%;
-            height: 500px;
-            border-radius: 10px;
-            background: linear-gradient(45deg, #2c3e50, #34495e);
-            border: 2px solid rgba(255,255,255,0.3);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        #videoContainer {
             position: relative;
+            width: 100%;
+            min-height: 400px;
+            background: #000;
+            border-radius: 10px;
             overflow: hidden;
-        }
-
-        .avatar-icon {
-            font-size: 8em;
-            opacity: 0.7;
             margin-bottom: 20px;
-            animation: pulse 2s infinite;
         }
 
-        .avatar-speaking {
-            animation: pulse 0.5s infinite alternate;
-        }
-
-        .avatar-text {
-            font-size: 1.5em;
-            text-align: center;
-            padding: 0 20px;
-            font-weight: bold;
-        }
-
-        .sound-bars {
-            display: flex;
-            gap: 5px;
-            margin: 20px 0;
-        }
-
-        .sound-bar {
-            width: 6px;
-            height: 30px;
-            background: #3498db;
-            border-radius: 3px;
-            animation: soundWave 1s infinite ease-in-out;
-        }
-
-        .sound-bar:nth-child(2) { animation-delay: 0.1s; }
-        .sound-bar:nth-child(3) { animation-delay: 0.2s; }
-        .sound-bar:nth-child(4) { animation-delay: 0.3s; }
-        .sound-bar:nth-child(5) { animation-delay: 0.4s; }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes soundWave {
-            0%, 100% { height: 10px; }
-            50% { height: 40px; }
+        #remoteVideo video {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
         }
 
         .button {
             background: linear-gradient(45deg, #ff6b6b, #ee5a52);
             border: none;
             color: white;
-            padding: 15px 30px;
-            margin: 10px 5px;
+            padding: 12px 24px;
+            margin: 8px 4px;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(238, 90, 82, 0.3);
+            width: calc(100% - 8px);
         }
 
-        .button:hover {
+        .button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(238, 90, 82, 0.4);
         }
@@ -156,18 +111,8 @@
             box-shadow: none;
         }
 
-        .status {
-            margin: 15px 0;
-            padding: 15px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.1);
-            border-left: 4px solid #4CAF50;
-            font-weight: bold;
-        }
-
-        .error {
-            border-left-color: #f44336;
-            background: rgba(244, 67, 54, 0.1);
+        .mic-button {
+            background: linear-gradient(45deg, #28a745, #20c997);
         }
 
         .input-group {
@@ -176,13 +121,14 @@
 
         .input-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: bold;
+            font-size: 14px;
         }
 
-        .input-group input, .input-group textarea {
+        .input-group input, .input-group textarea, .input-group select {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border: 1px solid rgba(255,255,255,0.3);
             border-radius: 8px;
             background: rgba(255,255,255,0.1);
@@ -195,21 +141,26 @@
             color: rgba(255,255,255,0.7);
         }
 
-        .conversation-log {
-            max-height: 250px;
-            overflow-y: auto;
+        .input-group select option {
+            background: #2a5298;
+            color: white;
+        }
+
+        .conversation-area {
             background: rgba(0,0,0,0.3);
-            padding: 15px;
             border-radius: 10px;
+            padding: 15px;
             margin: 15px 0;
-            font-family: 'Segoe UI', sans-serif;
+            min-height: 200px;
+            overflow-y: auto;
             font-size: 13px;
         }
 
-        .conversation-item {
+        .message {
             margin: 8px 0;
-            padding: 8px;
-            border-radius: 5px;
+            padding: 10px;
+            border-radius: 8px;
+            line-height: 1.4;
         }
 
         .user-message {
@@ -228,210 +179,217 @@
             font-style: italic;
         }
 
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            border-left: 4px solid #4CAF50;
+            font-weight: bold;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+
+        .status.error {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .config-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .config-section h4 {
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+
+        #logging {
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
         .footer {
             text-align: center;
             padding: 20px;
             background: rgba(0,0,0,0.2);
             margin-top: auto;
         }
-
-        .mic-button {
-            background: linear-gradient(45deg, #28a745, #20c997);
-            font-size: 18px;
-        }
-
-        .mic-button.recording {
-            background: linear-gradient(45deg, #dc3545, #c82333);
-            animation: pulse 1s infinite;
-        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>🏛️ Fiscalía General de la Nación</h1>
-        <p>Estrategia de Transformación Digital - Asistente Virtual Inteligente</p>
+        <p class="subtitle">Avatar Conversacional Real-Time con IA Avanzada</p>
     </div>
 
     <div class="container">
         <div class="avatar-section">
-            <h2>🤖 Asistente Virtual</h2>
-            <div class="avatar-display" id="avatarDisplay">
-                <div class="avatar-icon" id="avatarIcon">👨‍💼</div>
-                <div class="sound-bars" id="soundBars" style="display: none;">
-                    <div class="sound-bar"></div>
-                    <div class="sound-bar"></div>
-                    <div class="sound-bar"></div>
-                    <div class="sound-bar"></div>
-                    <div class="sound-bar"></div>
-                </div>
-                <div class="avatar-text" id="avatarText">Especialista en Transformación Digital</div>
+            <h3>🤖 Avatar Hiperrealista</h3>
+            <div id="videoContainer">
+                <div id="remoteVideo"></div>
+                <canvas id="canvas" width="1920" height="1080" style="background-color: transparent;" hidden></canvas>
+                <canvas id="tmpCanvas" width="1920" height="1080" hidden></canvas>
             </div>
-            <div id="status" class="status">Sistema listo. Presione 'Iniciar Sesión' para comenzar</div>
+            
+            <div class="input-group">
+                <label for="spokenText">💬 Conversación con el Avatar:</label>
+                <textarea id="spokenText" rows="3" placeholder="Escriba su pregunta sobre transformación digital...">¿Cuáles son los beneficios de la transformación digital en el sistema judicial colombiano?</textarea>
+                <button id="speak" class="button" disabled>🗣️ Hacer que el Avatar Hable</button>
+                <button id="stopSpeaking" class="button" disabled>⏹️ Detener Avatar</button>
+            </div>
+
+            <div class="conversation-area" id="conversationArea">
+                <div class="message system-message">
+                    <strong>Sistema:</strong> Avatar preparado para conversación. Configure las credenciales y presione "Iniciar Sesión".
+                </div>
+            </div>
         </div>
 
         <div class="controls-section">
-            <h3>⚙️ Controles</h3>
+            <h3>⚙️ Configuración y Control</h3>
             
-            <button id="startSession" class="button">🚀 Iniciar Sesión</button>
-            <button id="stopSession" class="button" disabled>⏹️ Detener Sesión</button>
-            
-            <div class="input-group">
-                <label for="userInput">💬 Escribir Pregunta:</label>
-                <textarea id="userInput" rows="3" placeholder="Ejemplo: ¿Cuáles son los pilares de la transformación digital en la justicia?"></textarea>
-                <button id="sendText" class="button" disabled>📤 Enviar Texto</button>
-            </div>
-
-            <div class="input-group">
-                <button id="startListening" class="button mic-button" disabled>🎤 Hablar</button>
-                <button id="stopListening" class="button" disabled>⏹️ Parar Audio</button>
-            </div>
-
-            <div class="conversation-log" id="conversationLog">
-                <div class="conversation-item system-message">
-                    <strong>Sistema:</strong> Esperando inicialización...
+            <div class="config-section">
+                <h4>🔧 Azure Speech Resource</h4>
+                <div class="input-group">
+                    <label for="region">Región:</label>
+                    <select id="region">
+                        <option value="eastus2" selected>East US 2</option>
+                        <option value="westus2">West US 2</option>
+                        <option value="westeurope">West Europe</option>
+                        <option value="southeastasia">Southeast Asia</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="subscriptionKey">Subscription Key:</label>
+                    <input id="subscriptionKey" type="password" value="1de1c139475db9fb1f4c4abfdf578a0" placeholder="Su clave de suscripción...">
                 </div>
             </div>
+
+            <div class="config-section">
+                <h4>🎭 Avatar y Voz</h4>
+                <div class="input-group">
+                    <label for="talkingAvatarCharacter">Avatar Character:</label>
+                    <input id="talkingAvatarCharacter" value="lisa" placeholder="lisa, harry, etc.">
+                </div>
+                <div class="input-group">
+                    <label for="talkingAvatarStyle">Avatar Style:</label>
+                    <input id="talkingAvatarStyle" value="casual-sitting" placeholder="casual-sitting, business, etc.">
+                </div>
+                <div class="input-group">
+                    <label for="ttsVoice">Voz TTS:</label>
+                    <input id="ttsVoice" value="es-CO-SalomeNeural" placeholder="Voz colombiana">
+                </div>
+            </div>
+
+            <button id="startSession" class="button">🚀 Iniciar Sesión Avatar</button>
+            <button id="stopSession" class="button" disabled>⏹️ Detener Sesión</button>
+
+            <div class="input-group">
+                <button id="addGPTResponse" class="button mic-button">🧠 Agregar Respuesta GPT-4</button>
+            </div>
+
+            <div id="status" class="status">Sistema listo. Configure las credenciales y presione "Iniciar Sesión Avatar".</div>
+
+            <div id="logging"></div>
         </div>
     </div>
 
     <div class="footer">
-        <p>© 2025 Fiscalía General de la Nación - Transformación Digital</p>
+        <p>© 2025 Fiscalía General de la Nación - Avatar Real-Time con Microsoft Azure</p>
     </div>
 
     <script>
-        // Configuración Azure
-        const config = {
-            cogSvcSubKey: "1de1c139475db9fb1f4c4abfdf578a0",
+        // Configuración GPT-4
+        const gptConfig = {
             azureOpenAIEndpoint: "https://fgnfoundrylabo3874907599.openai.azure.com/",
             azureOpenAIApiKey: "1oSTnxg0CC9O4oIaB2a6POpWSvOIFxXP6qwR5QlgbDW2ve79fE7KJQQJ99BCACHYHv6XJ3w3AAAAACOGNk1S",
             azureOpenAIDeploymentName: "gpt-4.1",
             azureOpenAIApiVersion: "2024-02-15-preview",
-            systemPrompt: "Eres un asistente experto en transformación digital para la Fiscalía General de la Nación de Colombia. Respondes preguntas sobre digitalización, modernización tecnológica, procesos judiciales digitales, inteligencia artificial en la justicia, ciberseguridad jurídica, y estrategias de transformación digital institucional. Siempre respondes en español colombiano, de manera formal pero accesible, sin emojis ni caracteres especiales, solo texto. Tus respuestas son precisas, informativas y orientadas a la transformación digital del sistema judicial. Mantienes un tono profesional y conocedor del contexto legal colombiano.",
-            sttlocales: "es-CO",
-            ttsVoice: "es-CO-SalomeNeural",
-            region: "eastus2"
+            systemPrompt: `Eres el asistente virtual especializado en Transformación Digital de la Fiscalía General de la Nación de Colombia. 
+
+EXPERTISE:
+- Digitalización judicial y administrativa
+- IA aplicada a investigación criminal
+- Ciberseguridad institucional
+- Expedientes electrónicos
+- Modernización tecnológica
+- Análisis forense digital
+
+ESTILO DE RESPUESTA:
+- Español colombiano formal pero accesible
+- Máximo 100 palabras por respuesta
+- Sin emojis ni caracteres especiales
+- Enfoque práctico y profesional
+- Ejemplos aplicables al contexto colombiano
+
+Proporciona respuestas expertas sobre cómo la tecnología mejora la eficiencia, transparencia y acceso a la justicia.`
         };
 
-        let speechSynthesizer;
-        let speechRecognizer;
-        let isSessionActive = false;
-        let isListening = false;
-        let isSpeaking = false;
+        // Variables globales
+        var avatarSynthesizer;
+        var peerConnection;
+        var previousAnimationFrameTimestamp = 0;
 
-        // Elementos DOM
-        const startSessionBtn = document.getElementById('startSession');
-        const stopSessionBtn = document.getElementById('stopSession');
-        const sendTextBtn = document.getElementById('sendText');
-        const startListeningBtn = document.getElementById('startListening');
-        const stopListeningBtn = document.getElementById('stopListening');
-        const userInput = document.getElementById('userInput');
-        const statusDiv = document.getElementById('status');
-        const conversationLog = document.getElementById('conversationLog');
-        const avatarDisplay = document.getElementById('avatarDisplay');
-        const avatarIcon = document.getElementById('avatarIcon');
-        const avatarText = document.getElementById('avatarText');
-        const soundBars = document.getElementById('soundBars');
+        // Logger mejorado
+        const log = msg => {
+            const timestamp = new Date().toLocaleTimeString();
+            document.getElementById('logging').innerHTML += `[${timestamp}] ${msg}<br>`;
+            document.getElementById('logging').scrollTop = document.getElementById('logging').scrollHeight;
+            console.log(msg);
+        }
 
-        // Funciones de utilidad
-        function updateStatus(message, isError = false) {
+        const updateStatus = (message, isError = false) => {
+            const statusDiv = document.getElementById('status');
             statusDiv.textContent = message;
             statusDiv.className = isError ? 'status error' : 'status';
-            console.log(message);
+            log(message);
         }
 
-        function addToConversation(speaker, message) {
-            const item = document.createElement('div');
+        const addToConversation = (speaker, message) => {
+            const conversationArea = document.getElementById('conversationArea');
+            const messageDiv = document.createElement('div');
             const className = speaker === 'Usuario' ? 'user-message' : 
                              speaker === 'Sistema' ? 'system-message' : 'avatar-message';
-            item.className = `conversation-item ${className}`;
-            item.innerHTML = `<strong>${speaker}:</strong> ${message}`;
-            conversationLog.appendChild(item);
-            conversationLog.scrollTop = conversationLog.scrollHeight;
+            messageDiv.className = `message ${className}`;
+            messageDiv.innerHTML = `<strong>${speaker}:</strong> ${message}`;
+            conversationArea.appendChild(messageDiv);
+            conversationArea.scrollTop = conversationArea.scrollHeight;
         }
 
-        function updateAvatarState(state, message = '') {
-            switch(state) {
-                case 'idle':
-                    avatarIcon.className = 'avatar-icon';
-                    avatarIcon.textContent = '👨‍💼';
-                    avatarText.textContent = 'Esperando pregunta...';
-                    soundBars.style.display = 'none';
-                    break;
-                case 'listening':
-                    avatarIcon.className = 'avatar-icon avatar-speaking';
-                    avatarIcon.textContent = '👂';
-                    avatarText.textContent = 'Escuchando...';
-                    soundBars.style.display = 'flex';
-                    break;
-                case 'thinking':
-                    avatarIcon.className = 'avatar-icon';
-                    avatarIcon.textContent = '🤔';
-                    avatarText.textContent = 'Procesando...';
-                    soundBars.style.display = 'none';
-                    break;
-                case 'speaking':
-                    avatarIcon.className = 'avatar-icon avatar-speaking';
-                    avatarIcon.textContent = '🗣️';
-                    avatarText.textContent = 'Respondiendo...';
-                    soundBars.style.display = 'flex';
-                    break;
-            }
-        }
-
-        // Inicializar Azure Speech SDK
-        async function initializeSpeech() {
+        // Obtener respuesta GPT-4
+        async function getGPTResponse(userMessage) {
             try {
-                updateStatus("Inicializando servicios de voz...");
-
-                const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(config.cogSvcSubKey, config.region);
-                
-                // Configurar síntesis de voz
-                speechConfig.speechSynthesisVoiceName = config.ttsVoice;
-                speechSynthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig);
-
-                // Configurar reconocimiento de voz
-                speechConfig.speechRecognitionLanguage = config.sttlocales;
-                const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-                speechRecognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
-
-                speechRecognizer.recognized = async (s, e) => {
-                    if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech && e.result.text.trim()) {
-                        const userText = e.result.text.trim();
-                        updateAvatarState('thinking');
-                        addToConversation('Usuario', userText);
-                        await processUserInput(userText);
-                    }
-                };
-
-                speechRecognizer.recognizing = (s, e) => {
-                    if (e.result.text.trim()) {
-                        avatarText.textContent = `Escuchando: "${e.result.text}"`;
-                    }
-                };
-
-                updateStatus("Servicios de voz inicializados");
-                return true;
-            } catch (error) {
-                updateStatus(`Error al inicializar voz: ${error.message}`, true);
-                return false;
-            }
-        }
-
-        // Obtener respuesta de OpenAI
-        async function getOpenAIResponse(userMessage) {
-            try {
-                const response = await fetch(`${config.azureOpenAIEndpoint}openai/deployments/${config.azureOpenAIDeploymentName}/chat/completions?api-version=${config.azureOpenAIApiVersion}`, {
+                const response = await fetch(`${gptConfig.azureOpenAIEndpoint}openai/deployments/${gptConfig.azureOpenAIDeploymentName}/chat/completions?api-version=${gptConfig.azureOpenAIApiVersion}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'api-key': config.azureOpenAIApiKey
+                        'api-key': gptConfig.azureOpenAIApiKey
                     },
                     body: JSON.stringify({
                         messages: [
-                            { role: "system", content: config.systemPrompt },
+                            { role: "system", content: gptConfig.systemPrompt },
                             { role: "user", content: userMessage }
                         ],
-                        max_tokens: 800,
+                        max_tokens: 300,
                         temperature: 0.7
                     })
                 });
@@ -441,181 +399,253 @@
                 }
 
                 const data = await response.json();
-                return data.choices[0].message.content;
+                return data.choices[0].message.content.trim();
             } catch (error) {
-                console.error('Error OpenAI:', error);
-                return "Disculpe, hay un problema técnico con el servicio de inteligencia artificial. Por favor intente nuevamente en un momento.";
+                log(`Error GPT-4: ${error.message}`);
+                return "Disculpe, hay un problema técnico con el servicio de IA. Por favor intente nuevamente.";
             }
         }
 
-        // Síntesis de voz
-        async function speakText(text) {
-            return new Promise((resolve, reject) => {
-                try {
-                    updateAvatarState('speaking');
-                    isSpeaking = true;
-                    
-                    speechSynthesizer.speakTextAsync(
-                        text,
-                        (result) => {
-                            isSpeaking = false;
-                            if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-                                updateAvatarState('idle');
-                                resolve();
-                            } else {
-                                updateAvatarState('idle');
-                                reject(new Error("Error en síntesis de voz"));
-                            }
-                        },
-                        (error) => {
-                            isSpeaking = false;
-                            updateAvatarState('idle');
-                            reject(error);
-                        }
-                    );
-                } catch (error) {
-                    isSpeaking = false;
-                    updateAvatarState('idle');
-                    reject(error);
+        // Setup WebRTC (código original de Microsoft)
+        function setupWebRTC(iceServerUrl, iceServerUsername, iceServerCredential) {
+            peerConnection = new RTCPeerConnection({
+                iceServers: [{
+                    urls: [ iceServerUrl ],
+                    username: iceServerUsername,
+                    credential: iceServerCredential
+                }]
+            });
+
+            peerConnection.ontrack = function (event) {
+                const remoteVideoDiv = document.getElementById('remoteVideo');
+                for (let i = 0; i < remoteVideoDiv.childNodes.length; i++) {
+                    if (remoteVideoDiv.childNodes[i].localName === event.track.kind) {
+                        remoteVideoDiv.removeChild(remoteVideoDiv.childNodes[i]);
+                    }
                 }
+
+                const mediaPlayer = document.createElement(event.track.kind);
+                mediaPlayer.id = event.track.kind;
+                mediaPlayer.srcObject = event.streams[0];
+                mediaPlayer.autoplay = true;
+                document.getElementById('remoteVideo').appendChild(mediaPlayer);
+
+                if (event.track.kind === 'video') {
+                    mediaPlayer.playsInline = true;
+                    mediaPlayer.addEventListener('play', () => {
+                        updateStatus("🎥 Avatar visual activado - Listo para conversación");
+                        addToConversation('Sistema', 'Avatar hiperrealista activado. El avatar puede hablar y gesticular.');
+                    });
+                } else {
+                    mediaPlayer.muted = true;
+                }
+            };
+
+            peerConnection.oniceconnectionstatechange = e => {
+                log("WebRTC status: " + peerConnection.iceConnectionState);
+
+                if (peerConnection.iceConnectionState === 'connected') {
+                    document.getElementById('stopSession').disabled = false;
+                    document.getElementById('speak').disabled = false;
+                    document.getElementById('addGPTResponse').disabled = false;
+                    updateStatus("✅ Sesión avatar activa - Sistema completo funcionando");
+                }
+
+                if (peerConnection.iceConnectionState === 'disconnected' || peerConnection.iceConnectionState === 'failed') {
+                    document.getElementById('speak').disabled = true;
+                    document.getElementById('stopSpeaking').disabled = true;
+                    document.getElementById('stopSession').disabled = true;
+                    document.getElementById('addGPTResponse').disabled = true;
+                    document.getElementById('startSession').disabled = false;
+                    updateStatus("❌ Conexión perdida - Presione 'Iniciar Sesión' para reconectar", true);
+                }
+            };
+
+            peerConnection.addTransceiver('video', { direction: 'sendrecv' });
+            peerConnection.addTransceiver('audio', { direction: 'sendrecv' });
+
+            avatarSynthesizer.startAvatarAsync(peerConnection).then((r) => {
+                if (r.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+                    log("✅ Avatar iniciado correctamente. Result ID: " + r.resultId);
+                    addToConversation('Sistema', 'Avatar Real-Time conectado exitosamente. ¡Hola! Soy su asistente especializado en Transformación Digital de la Fiscalía General.');
+                } else {
+                    log("❌ No se pudo iniciar avatar. Result ID: " + r.resultId);
+                    if (r.reason === SpeechSDK.ResultReason.Canceled) {
+                        let cancellationDetails = SpeechSDK.CancellationDetails.fromResult(r);
+                        if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
+                            log("Error: " + cancellationDetails.errorDetails);
+                            updateStatus("Error: " + cancellationDetails.errorDetails, true);
+                        }
+                    }
+                    document.getElementById('startSession').disabled = false;
+                }
+            }).catch((error) => {
+                log("❌ Avatar falló al iniciar. Error: " + error);
+                updateStatus("Error al iniciar avatar: " + error, true);
+                document.getElementById('startSession').disabled = false;
             });
         }
 
-        // Procesar entrada del usuario
-        async function processUserInput(userText) {
-            try {
-                updateStatus("Generando respuesta...");
-                
-                const response = await getOpenAIResponse(userText);
-                addToConversation('Asistente', response);
-                
-                // Intentar síntesis de voz
-                try {
-                    await speakText(response);
-                    updateStatus("Listo para la siguiente pregunta");
-                } catch (voiceError) {
-                    console.log("Voice synthesis failed:", voiceError);
-                    updateStatus("Respuesta lista (audio no disponible)");
-                    updateAvatarState('idle');
-                }
-            } catch (error) {
-                updateStatus(`Error: ${error.message}`, true);
-                updateAvatarState('idle');
-            }
+        // Función para codificar HTML
+        function htmlEncode(text) {
+            const entityMap = {
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+                "'": '&#39;', '/': '&#x2F;'
+            };
+            return String(text).replace(/[&<>"'\/]/g, (match) => entityMap[match]);
         }
 
         // Iniciar sesión
-        async function startSession() {
-            try {
-                updateStatus("Iniciando sesión...");
-                
-                // Habilitar controles inmediatamente
-                isSessionActive = true;
-                startSessionBtn.disabled = true;
-                stopSessionBtn.disabled = false;
-                sendTextBtn.disabled = false;
-                
-                updateAvatarState('idle');
-                updateStatus("Sesión activa - Sistema listo");
-                addToConversation('Sistema', '¡Hola! Soy su asistente virtual especializado en Transformación Digital para la Fiscalía General de la Nación. Puedo responder preguntas sobre digitalización, modernización tecnológica, procesos judiciales digitales y estrategias de transformación institucional. ¿En qué puedo ayudarle?');
-                
-                // Inicializar servicios de voz en paralelo
-                const voiceInitialized = await initializeSpeech();
-                if (voiceInitialized) {
-                    startListeningBtn.disabled = false;
-                    updateStatus("Sistema completo activo - Texto y voz disponibles");
-                    addToConversation('Sistema', 'Servicios de voz activados. Puede hablar o escribir sus preguntas.');
-                } else {
-                    updateStatus("Sistema activo en modo texto");
-                }
-            } catch (error) {
-                updateStatus(`Error al iniciar: ${error.message}`, true);
+        window.startSession = () => {
+            const cogSvcRegion = document.getElementById('region').value;
+            const cogSvcSubKey = document.getElementById('subscriptionKey').value;
+            
+            if (cogSvcSubKey === '' || cogSvcSubKey === '1de1c139475db9fb1f4c4abfdf578a0') {
+                updateStatus("⚠️ Por favor configure su clave de suscripción de Azure Speech", true);
+                return;
             }
-        }
+
+            updateStatus("🚀 Inicializando avatar hiperrealista...");
+
+            const speechSynthesisConfig = SpeechSDK.SpeechConfig.fromSubscription(cogSvcSubKey, cogSvcRegion);
+            
+            const videoFormat = new SpeechSDK.AvatarVideoFormat();
+            const avatarConfig = new SpeechSDK.AvatarConfig(
+                document.getElementById('talkingAvatarCharacter').value,
+                document.getElementById('talkingAvatarStyle').value,
+                videoFormat
+            );
+
+            avatarSynthesizer = new SpeechSDK.AvatarSynthesizer(speechSynthesisConfig, avatarConfig);
+            
+            avatarSynthesizer.avatarEventReceived = function (s, e) {
+                const offsetMessage = e.offset === 0 ? "" : `, offset: ${e.offset / 10000}ms`;
+                log(`Avatar event: ${e.description}${offsetMessage}`);
+            };
+
+            document.getElementById('startSession').disabled = true;
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", `https://${cogSvcRegion}.tts.speech.microsoft.com/cognitiveservices/avatar/relay/token/v1`);
+            xhr.setRequestHeader("Ocp-Apim-Subscription-Key", cogSvcSubKey);
+            xhr.addEventListener("readystatechange", function() {
+                if (this.readyState === 4) {
+                    try {
+                        const responseData = JSON.parse(this.responseText);
+                        const iceServerUrl = responseData.Urls[0];
+                        const iceServerUsername = responseData.Username;
+                        const iceServerCredential = responseData.Password;
+                        setupWebRTC(iceServerUrl, iceServerUsername, iceServerCredential);
+                    } catch (error) {
+                        updateStatus("Error al obtener credenciales WebRTC: " + error.message, true);
+                        document.getElementById('startSession').disabled = false;
+                    }
+                }
+            });
+            xhr.send();
+        };
+
+        // Hacer hablar al avatar
+        window.speak = () => {
+            document.getElementById('speak').disabled = true;
+            document.getElementById('stopSpeaking').disabled = false;
+            document.getElementById('audio')?.muted && (document.getElementById('audio').muted = false);
+            
+            const spokenText = document.getElementById('spokenText').value;
+            const ttsVoice = document.getElementById('ttsVoice').value;
+            
+            const spokenSsml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='es-CO'><voice name='${ttsVoice}'>${htmlEncode(spokenText)}</voice></speak>`;
+            
+            log("🗣️ Solicitud de habla enviada al avatar");
+            addToConversation('Avatar IA', spokenText);
+            
+            avatarSynthesizer.speakSsmlAsync(spokenSsml).then((result) => {
+                document.getElementById('speak').disabled = false;
+                document.getElementById('stopSpeaking').disabled = true;
+                
+                if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+                    log(`✅ Avatar habló: "${spokenText}"`);
+                    updateStatus("✅ Avatar completó respuesta - Listo para siguiente interacción");
+                } else {
+                    log(`❌ No se pudo hacer hablar al avatar. Result ID: ${result.resultId}`);
+                    if (result.reason === SpeechSDK.ResultReason.Canceled) {
+                        const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
+                        log(`Error: ${cancellationDetails.errorDetails}`);
+                    }
+                }
+            }).catch(error => {
+                log(`❌ Error en síntesis: ${error}`);
+                document.getElementById('speak').disabled = false;
+                document.getElementById('stopSpeaking').disabled = true;
+            });
+        };
+
+        // Detener habla
+        window.stopSpeaking = () => {
+            document.getElementById('stopSpeaking').disabled = true;
+            avatarSynthesizer.stopSpeakingAsync().then(() => {
+                log("⏹️ Solicitud de detener habla enviada");
+                updateStatus("⏹️ Avatar detuvo el habla");
+            }).catch(log);
+        };
 
         // Detener sesión
-        function stopSession() {
-            try {
-                if (speechSynthesizer && isSpeaking) {
-                    speechSynthesizer.close();
-                }
-                if (speechRecognizer && isListening) {
-                    speechRecognizer.stopContinuousRecognitionAsync();
-                }
-                
-                isSessionActive = false;
-                isListening = false;
-                isSpeaking = false;
-                
-                // Actualizar controles
-                startSessionBtn.disabled = false;
-                stopSessionBtn.disabled = true;
-                sendTextBtn.disabled = true;
-                startListeningBtn.disabled = true;
-                stopListeningBtn.disabled = true;
-                
-                updateAvatarState('idle');
-                avatarIcon.textContent = '👨‍💼';
-                avatarText.textContent = 'Sesión finalizada';
-                
-                updateStatus("Sesión detenida");
-                addToConversation('Sistema', 'Sesión finalizada. Gracias por usar el asistente virtual de la Fiscalía General.');
-            } catch (error) {
-                updateStatus(`Error al detener: ${error.message}`, true);
+        window.stopSession = () => {
+            document.getElementById('speak').disabled = true;
+            document.getElementById('stopSession').disabled = true;
+            document.getElementById('stopSpeaking').disabled = true;
+            document.getElementById('addGPTResponse').disabled = true;
+            document.getElementById('startSession').disabled = false;
+            
+            if (avatarSynthesizer) {
+                avatarSynthesizer.close();
             }
-        }
+            
+            updateStatus("🔴 Sesión avatar terminada");
+            addToConversation('Sistema', 'Sesión del avatar finalizada. Gracias por usar el asistente de Transformación Digital.');
+        };
+
+        // Agregar respuesta GPT-4
+        window.addGPTResponse = async () => {
+            const userQuestion = document.getElementById('spokenText').value.trim();
+            if (!userQuestion) {
+                updateStatus("⚠️ Por favor escriba una pregunta primero", true);
+                return;
+            }
+
+            updateStatus("🧠 Generando respuesta inteligente con GPT-4...");
+            document.getElementById('addGPTResponse').disabled = true;
+
+            try {
+                addToConversation('Usuario', userQuestion);
+                const gptResponse = await getGPTResponse(userQuestion);
+                
+                // Actualizar el campo de texto con la respuesta GPT
+                document.getElementById('spokenText').value = gptResponse;
+                
+                updateStatus("✅ Respuesta GPT-4 generada - Presione 'Hacer que el Avatar Hable'");
+                addToConversation('GPT-4', gptResponse);
+                
+                // Habilitar el botón de hablar
+                document.getElementById('speak').disabled = false;
+                
+            } catch (error) {
+                updateStatus("❌ Error al generar respuesta GPT-4: " + error.message, true);
+            } finally {
+                document.getElementById('addGPTResponse').disabled = false;
+            }
+        };
 
         // Event listeners
-        startSessionBtn.addEventListener('click', startSession);
-        stopSessionBtn.addEventListener('click', stopSession);
-
-        sendTextBtn.addEventListener('click', async () => {
-            const text = userInput.value.trim();
-            if (text && isSessionActive) {
-                userInput.value = '';
-                addToConversation('Usuario', text);
-                await processUserInput(text);
-            }
-        });
-
-        userInput.addEventListener('keypress', async (e) => {
-            if (e.key === 'Enter' && !e.shiftKey && isSessionActive) {
-                e.preventDefault();
-                const text = userInput.value.trim();
-                if (text) {
-                    userInput.value = '';
-                    addToConversation('Usuario', text);
-                    await processUserInput(text);
-                }
-            }
-        });
-
-        startListeningBtn.addEventListener('click', () => {
-            if (isSessionActive && !isListening && speechRecognizer) {
-                speechRecognizer.startContinuousRecognitionAsync();
-                isListening = true;
-                startListeningBtn.disabled = true;
-                startListeningBtn.classList.add('recording');
-                stopListeningBtn.disabled = false;
-                updateAvatarState('listening');
-                updateStatus("Escuchando... Puede hablar ahora");
-            }
-        });
-
-        stopListeningBtn.addEventListener('click', () => {
-            if (isListening && speechRecognizer) {
-                speechRecognizer.stopContinuousRecognitionAsync();
-                isListening = false;
-                startListeningBtn.disabled = false;
-                startListeningBtn.classList.remove('recording');
-                stopListeningBtn.disabled = true;
-                updateAvatarState('idle');
-                updateStatus("Micrófono desactivado");
-            }
-        });
+        document.getElementById('startSession').addEventListener('click', window.startSession);
+        document.getElementById('speak').addEventListener('click', window.speak);
+        document.getElementById('stopSpeaking').addEventListener('click', window.stopSpeaking);
+        document.getElementById('stopSession').addEventListener('click', window.stopSession);
+        document.getElementById('addGPTResponse').addEventListener('click', window.addGPTResponse);
 
         // Inicialización
-        updateStatus("Sistema listo. Presione 'Iniciar Sesión' para comenzar");
+        updateStatus("🎭 Sistema Avatar Real-Time preparado. Configure su clave de Azure Speech y presione 'Iniciar Sesión Avatar'.");
+        addToConversation('Sistema', 'Bienvenido al sistema de Avatar Conversacional de la Fiscalía General. Este avatar utiliza tecnología Real-Time de Microsoft Azure para proporcionar respuestas visuales y auditivas sobre Transformación Digital.');
     </script>
 </body>
 </html>
