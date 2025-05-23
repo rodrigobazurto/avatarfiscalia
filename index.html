@@ -24,15 +24,23 @@
         .header {
             background: rgba(255,255,255,0.1);
             padding: 20px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             backdrop-filter: blur(10px);
             border-bottom: 2px solid #ffd700;
             flex-shrink: 0;
         }
 
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
         .header h1 {
             font-size: 3.2em;
-            margin-bottom: 8px;
+            margin: 0;
             color: white;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             font-weight: bold;
@@ -44,6 +52,7 @@
             color: #ffd700;
             font-style: italic;
             font-weight: 500;
+            margin: 0;
         }
 
         .main-container {
@@ -294,8 +303,10 @@
 </head>
 <body>
     <div class="header">
-        <h1>Luz</h1>
-        <p class="tagline">"La Justicia se ilumina con Inteligencia Artificial"</p>
+        <div class="header-content">
+            <h1>Luz</h1>
+            <p class="tagline">"La Justicia se ilumina con Inteligencia Artificial"</p>
+        </div>
     </div>
 
     <div class="main-container">
@@ -316,7 +327,7 @@
                 
                 <div class="wake-word-info">
                     <div>🎤 <span class="wake-word-highlight">Comandos de voz disponibles</span></div>
-                    <small><strong>"Luz"</strong> = Pregunta • <strong>"Toc toc"</strong> = Explicación</small>
+                    <small><strong>"Luz"</strong> = Pregunta • <strong>"Toc toc"</strong> = Explicación contextual</small>
                 </div>
                 
                 <div id="status" class="status">Sistema listo. Presione 'Iniciar Avatar' para comenzar</div>
@@ -376,12 +387,13 @@ PARA "LUZ" (PREGUNTAS):
 4. Preguntas de impacto: "¿Cuál será el impacto específico de [iniciativa] en los fiscales?"
 5. Preguntas de cronograma: "¿Cuáles son los tiempos estimados para [proyecto]?"
 
-PARA "TOC TOC" (EXPLICACIONES):
-1. Explicaciones técnicas: Detallar cómo funcionan los sistemas mencionados
-2. Contexto histórico: Explicar antecedentes y evolución de los proyectos
-3. Beneficios específicos: Detallar ventajas concretas para la Fiscalía
-4. Comparaciones: Explicar diferencias con sistemas anteriores
-5. Implementación práctica: Describir pasos concretos de ejecución
+PARA "TOC TOC" (EXPLICACIONES CONTEXTUALES):
+1. Explicaciones técnicas: Solo sobre temas mencionados en la presentación
+2. Contexto institucional: Antecedentes específicos de proyectos mencionados
+3. Beneficios específicos: Ventajas concretas para la Fiscalía de temas expuestos
+4. Comparaciones relevantes: Solo con sistemas anteriores mencionados
+5. Implementación práctica: Pasos concretos de proyectos específicos presentados
+6. IMPORTANTE: Si el tema no está relacionado con la presentación actual, declinar educadamente manteniendo el enfoque
 
 ESTILO DE RESPUESTAS:
 - Formal pero conversacional
@@ -474,7 +486,7 @@ RESPONDE SOLO con la pregunta o explicación directa, sin preámbulos ni explica
         // Generar explicación inteligente basada en la transcripción
         async function generateIntelligentExplanation() {
             if (!fullTranscription.trim()) {
-                return "Señora Fiscal, estoy lista para proporcionar explicaciones detalladas sobre los temas que exponga.";
+                return "Señora Fiscal, estoy lista para proporcionar explicaciones detalladas sobre los temas que exponga en su presentación.";
             }
 
             try {
@@ -489,7 +501,16 @@ RESPONDE SOLO con la pregunta o explicación directa, sin preámbulos ni explica
                     body: JSON.stringify({
                         messages: [
                             { role: "system", content: config.systemPrompt },
-                            { role: "user", content: `COMANDO: TOC TOC (generar explicación)\n\nAnaliza esta transcripción de la presentación de la Fiscal y proporciona UNA explicación detallada, profundización o contexto adicional sobre el tema más reciente o relevante mencionado:\n\n"${fullTranscription}"` }
+                            { role: "user", content: `COMANDO: TOC TOC (generar explicación contextual)
+
+INSTRUCCIONES ESPECÍFICAS:
+- Solo explica temas que estén directamente relacionados con lo que la Fiscal ha mencionado en su presentación
+- Si el último tema mencionado no está relacionado con la Estrategia de Transformación Digital de la Fiscalía, responde amablemente que prefieres mantener el foco en los temas de la presentación
+- Proporciona explicaciones detalladas solo sobre temas relevantes al contexto de la reunión
+
+Analiza esta transcripción y proporciona UNA explicación detallada sobre el tema más reciente Y relevante mencionado, o indica educadamente que prefieres mantener el enfoque en los temas de la presentación:
+
+"${fullTranscription}"` }
                         ],
                         max_tokens: 180,
                         temperature: 0.7
@@ -504,7 +525,7 @@ RESPONDE SOLO con la pregunta o explicación directa, sin preámbulos ni explica
                 return data.choices[0].message.content.trim();
             } catch (error) {
                 console.error('Error OpenAI:', error);
-                return "Disculpe, Señora Fiscal, ¿sobre qué tema específico le gustaría que proporcione más detalles?";
+                return "Disculpe, Señora Fiscal. Prefiero mantener nuestro enfoque en los temas específicos de la Estrategia de Transformación Digital que está presentando.";
             }
         }
 
@@ -612,8 +633,8 @@ RESPONDE SOLO con la pregunta o explicación directa, sin preámbulos ni explica
                         const luzPattern = /(?:^|\s|[.,;!?])\s*luz\s*(?:[.,;!?]|\s|$)/i;
                         const containsLuzCommand = luzPattern.test(textLower);
                         
-                        // Patrón para "Toc toc" (explicación)
-                        const tocPattern = /(?:^|\s|[.,;!?])\s*toc\s+toc\s*(?:[.,;!?]|\s|$)/i;
+                        // Patrón para "Toc toc" (explicación) - Más flexible para captar variaciones
+                        const tocPattern = /(?:^|\s|[.,;!?])\s*(?:toc\s*toc|tok\s*tok|toque\s*toque)\s*(?:[.,;!?]|\s|$)/i;
                         const containsTocCommand = tocPattern.test(textLower);
                         
                         if ((containsLuzCommand || containsTocCommand) && !isProcessingQuestion) {
@@ -646,8 +667,8 @@ RESPONDE SOLO con la pregunta o explicación directa, sin preámbulos ni explica
                             } else if (containsTocCommand) {
                                 updateStatus("🎯 Comando 'Toc toc' detectado - Generando explicación...");
                                 
-                                // Limpiar comando de la transcripción
-                                const textWithoutCommand = newText.replace(/(?:^|\s|[.,;!?])\s*toc\s+toc\s*(?:[.,;!?]|\s|$)/gi, ' ').trim();
+                                // Limpiar comando de la transcripción - patrón más amplio
+                                const textWithoutCommand = newText.replace(/(?:^|\s|[.,;!?])\s*(?:toc\s*toc|tok\s*tok|toque\s*toque)\s*(?:[.,;!?]|\s|$)/gi, ' ').trim();
                                 if (textWithoutCommand) {
                                     if (fullTranscription) {
                                         fullTranscription += " " + textWithoutCommand;
