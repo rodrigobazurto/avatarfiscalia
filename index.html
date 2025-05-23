@@ -36,70 +36,35 @@
 
         .header {
             background: linear-gradient(90deg, #003f7f 0%, #0056b3 100%);
-            padding: 15px 30px;
+            padding: 20px 30px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             backdrop-filter: blur(10px);
             border-bottom: 2px solid #ffd700;
             flex-shrink: 0;
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .logo-fiscalia {
-            width: 70px;
-            height: 50px;
-            background: white;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            padding: 8px;
-        }
-
-        .logo-fiscalia img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+        .header-content {
+            text-align: center;
         }
 
         .header-content h1 {
-            font-size: 2.8em;
+            font-size: 3.5em;
             margin: 0;
             color: white;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             font-weight: bold;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
         }
 
         .header-content .tagline {
-            font-size: 1.0em;
+            font-size: 1.2em;
             color: #ffd700;
-            margin: 5px 0 0 0;
+            margin: 8px 0 0 0;
             font-style: italic;
             font-weight: 500;
-        }
-
-        .escudo-colombia {
-            width: 50px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .escudo-colombia img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
         }
 
         .main-container {
@@ -408,7 +373,7 @@
                 
                 <div class="wake-word-info">
                     <div>🎤 <span class="wake-word-highlight">Escuchando continuamente</span></div>
-                    <small>Diga "LUZ" para que la IA genere una pregunta</small>
+                    <small>Diga "Luz" para que la IA genere una pregunta</small>
                 </div>
                 
                 <div id="status" class="status">Sistema listo. Presione 'Iniciar Avatar' para comenzar</div>
@@ -598,7 +563,7 @@ RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adiciona
                     updateStatus("✅ Avatar conectado - Comenzando escucha automática");
                     
                     setTimeout(() => {
-                        const welcomeMessage = "Buenos días, Señora Fiscal. Soy LUZ, su asistente de inteligencia artificial especializado en Transformación Digital de la Fiscalía General de la Nación. Estoy lista para escuchar su presentación. Cuando desee que le haga una pregunta inteligente, simplemente diga mi nombre: LUZ.";
+                        const welcomeMessage = "Buenos días, Señora Fiscal. Soy Luz, su asistente de inteligencia artificial especializado en Transformación Digital de la Fiscalía General de la Nación. Estoy lista para escuchar su presentación. Cuando desee que le haga una pregunta inteligente, simplemente diga mi nombre: Luz.";
                         responseArea.value = welcomeMessage;
                         makeAvatarSpeak(welcomeMessage).then(() => {
                             startContinuousListening();
@@ -650,15 +615,15 @@ RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adiciona
                     if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech && e.result.text.trim()) {
                         const newText = e.result.text.trim();
                         
-                        // Verificar si contiene la palabra clave "LUZ"
+                        // Verificar si contiene la palabra clave "Luz"
                         const containsLuz = newText.toLowerCase().includes('luz');
                         
                         if (containsLuz && !isProcessingQuestion) {
-                            // Activación por palabra clave LUZ detectada
+                            // Activación por palabra clave Luz detectada
                             isProcessingQuestion = true;
-                            updateStatus("🎯 Palabra clave LUZ detectada - Generando pregunta inteligente...");
+                            updateStatus("🎯 Palabra clave Luz detectada - Generando pregunta inteligente...");
                             
-                            // No agregar "LUZ" a la transcripción, solo el contexto útil
+                            // No agregar "Luz" a la transcripción, solo el contexto útil
                             const textWithoutLuz = newText.replace(/\bluz\b/gi, '').trim();
                             if (textWithoutLuz) {
                                 if (fullTranscription) {
