@@ -316,7 +316,7 @@
                 
                 <div class="wake-word-info">
                     <div>🎤 <span class="wake-word-highlight">Escuchando continuamente</span></div>
-                    <small>Diga "Luz" para que la IA genere una pregunta</small>
+                    <small>Para activar, diga: "Luz" al inicio de su frase</small>
                 </div>
                 
                 <div id="status" class="status">Sistema listo. Presione 'Iniciar Avatar' para comenzar</div>
@@ -558,21 +558,24 @@ RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adiciona
                     if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech && e.result.text.trim()) {
                         const newText = e.result.text.trim();
                         
-                        // Verificar si contiene la palabra clave "Luz"
-                        const containsLuz = newText.toLowerCase().includes('luz');
+                        // Verificar si contiene la palabra clave "Luz" de forma más específica
+                        // Solo activar si "Luz" aparece al inicio de la frase o después de una pausa
+                        const textLower = newText.toLowerCase();
+                        const luzPattern = /(?:^|\s|[.,;!?])\s*luz\s*(?:[.,;!?]|\s|$)/i;
+                        const containsLuzCommand = luzPattern.test(textLower);
                         
-                        if (containsLuz && !isProcessingQuestion) {
+                        if (containsLuzCommand && !isProcessingQuestion) {
                             // Activación por palabra clave Luz detectada
                             isProcessingQuestion = true;
-                            updateStatus("🎯 Palabra clave Luz detectada - Generando pregunta inteligente...");
+                            updateStatus("🎯 Comando 'Luz' detectado - Generando pregunta inteligente...");
                             
-                            // No agregar "Luz" a la transcripción, solo el contexto útil
-                            const textWithoutLuz = newText.replace(/\bluz\b/gi, '').trim();
-                            if (textWithoutLuz) {
+                            // No agregar "Luz" como comando a la transcripción, solo el contexto útil
+                            const textWithoutLuzCommand = newText.replace(/(?:^|\s|[.,;!?])\s*luz\s*(?:[.,;!?]|\s|$)/gi, ' ').trim();
+                            if (textWithoutLuzCommand) {
                                 if (fullTranscription) {
-                                    fullTranscription += " " + textWithoutLuz;
+                                    fullTranscription += " " + textWithoutLuzCommand;
                                 } else {
-                                    fullTranscription = textWithoutLuz;
+                                    fullTranscription = textWithoutLuzCommand;
                                 }
                             }
                             
@@ -589,8 +592,8 @@ RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adiciona
                             
                             isProcessingQuestion = false;
                             
-                        } else if (!containsLuz) {
-                            // Texto normal - agregar a transcripción completa
+                        } else {
+                            // Texto normal - agregar a transcripción completa (incluso si contiene "luz" en contexto)
                             if (fullTranscription) {
                                 fullTranscription += " " + newText;
                             } else {
