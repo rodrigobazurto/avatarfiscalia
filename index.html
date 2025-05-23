@@ -310,7 +310,7 @@
                 
                 <div class="wake-word-info">
                     <div>🎤 <span class="wake-word-highlight">Escuchando continuamente</span></div>
-                    <small>El avatar analizará lo que diga y podrá preguntar</small>
+                    <small>Diga "LUZ" para que la IA genere una pregunta</small>
                 </div>
                 
                 <div id="status" class="status">Sistema listo. Presione 'Iniciar Avatar' para comenzar</div>
@@ -391,6 +391,7 @@ RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adiciona
         let isListening = false;
         let fullTranscription = ""; // Almacena toda la transcripción
         let lastSentenceCount = 0;
+        let isProcessingQuestion = false; // Para evitar múltiples activaciones
 
         // Elementos DOM
         const startSessionBtn = document.getElementById('startSession');
@@ -499,7 +500,7 @@ RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adiciona
                     updateStatus("✅ Avatar conectado - Comenzando escucha automática");
                     
                     setTimeout(() => {
-                        const welcomeMessage = "Buenos días, Señora Fiscal. Soy su asistente de inteligencia artificial especializado en Transformación Digital. Estoy listo para escuchar su presentación y hacerle preguntas relevantes cuando considere oportuno.";
+                        const welcomeMessage = "Buenos días, Señora Fiscal. Soy su asistente de inteligencia artificial especializado en Transformación Digital. Estoy listo para escuchar su presentación. Cuando desee que le haga una pregunta inteligente, simplemente diga la palabra LUZ.";
                         responseArea.value = welcomeMessage;
                         makeAvatarSpeak(welcomeMessage).then(() => {
                             startContinuousListening();
@@ -551,20 +552,53 @@ RESPONDE SOLO con la pregunta directa, sin preámbulos ni explicaciones adiciona
                     if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech && e.result.text.trim()) {
                         const newText = e.result.text.trim();
                         
-                        // Agregar nueva frase a la transcripción completa
-                        if (fullTranscription) {
-                            fullTranscription += " " + newText;
-                        } else {
-                            fullTranscription = newText;
+                        // Verificar si contiene la palabra clave "LUZ"
+                        const containsLuz = newText.toLowerCase().includes('luz');
+                        
+                        if (containsLuz && !isProcessingQuestion) {
+                            // Activación por palabra clave LUZ detectada
+                            isProcessingQuestion = true;
+                            updateStatus("🎯 Palabra clave LUZ detectada - Generando pregunta inteligente...");
+                            
+                            // No agregar "LUZ" a la transcripción, solo el contexto útil
+                            const textWithoutLuz = newText.replace(/\bluz\b/gi, '').trim();
+                            if (textWithoutLuz) {
+                                if (fullTranscription) {
+                                    fullTranscription += " " + textWithoutLuz;
+                                } else {
+                                    fullTranscription = textWithoutLuz;
+                                }
+                            }
+                            
+                            // Generar y hacer pregunta automáticamente
+                            try {
+                                const question = await generateIntelligentQuestion();
+                                responseArea.value = question;
+                                await makeAvatarSpeak(question);
+                                updateStatus("✅ Pregunta realizada - Continuando escucha", 'listening');
+                            } catch (error) {
+                                console.error('Error al generar pregunta automática:', error);
+                                updateStatus("Error al generar pregunta", 'error');
+                            }
+                            
+                            isProcessingQuestion = false;
+                            
+                        } else if (!containsLuz) {
+                            // Texto normal - agregar a transcripción completa
+                            if (fullTranscription) {
+                                fullTranscription += " " + newText;
+                            } else {
+                                fullTranscription = newText;
+                            }
+                            
+                            // Actualizar display
+                            transcriptionArea.value = fullTranscription;
+                            transcriptionArea.scrollTop = transcriptionArea.scrollHeight;
+                            updateWordCount();
+                            
+                            console.log("Transcrito:", newText);
+                            console.log("Transcripción completa tiene", fullTranscription.split(' ').length, "palabras");
                         }
-                        
-                        // Actualizar display
-                        transcriptionArea.value = fullTranscription;
-                        transcriptionArea.scrollTop = transcriptionArea.scrollHeight;
-                        updateWordCount();
-                        
-                        console.log("Transcrito:", newText);
-                        console.log("Transcripción completa tiene", fullTranscription.split(' ').length, "palabras");
                     }
                 };
 
