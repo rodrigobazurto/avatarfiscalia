@@ -162,12 +162,204 @@
             margin-left: 5px;
         }
 
-        .doc-button {
+        .button.documents {
             background: linear-gradient(45deg, #FF9800, #F57C00);
-            padding: 2px 6px;
-            font-size: 8px;
+            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+        }
+
+        .button.documents:hover:not(:disabled) {
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+        }
+
+        /* Modal para gestión de documentos */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #003f7f 0%, #0056b3 100%);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 2px solid #ffd700;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ffd700;
+            padding-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            color: white;
+            font-weight: bold;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: #ffd700;
+            font-size: 2em;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: white;
+        }
+
+        .upload-area {
+            border: 3px dashed #ffd700;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            background: rgba(255,215,0,0.1);
+            border-color: #ffed4a;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtitle {
+            font-size: 0.9em;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .document-card {
+            background: rgba(255,255,255,0.1);
             border-radius: 10px;
-            margin-left: 4px;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .document-card:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+
+        .document-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .document-icon {
+            font-size: 2em;
+            color: #ffd700;
+        }
+
+        .document-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .doc-action-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: background 0.3s;
+        }
+
+        .doc-action-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .doc-action-btn.remove {
+            background: rgba(244, 67, 54, 0.3);
+        }
+
+        .doc-action-btn.remove:hover {
+            background: rgba(244, 67, 54, 0.5);
+        }
+
+        .document-name {
+            font-weight: bold;
+            color: white;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+
+        .document-info {
+            font-size: 0.8em;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 8px;
+        }
+
+        .document-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            font-weight: bold;
+        }
+
+        .status-processed {
+            background: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+        }
+
+        .status-processing {
+            background: rgba(255, 152, 0, 0.3);
+            color: #FF9800;
+        }
+
+        .modal-footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+        }
+
+        .summary-stats {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9em;
         }
 
         .controls-section {
@@ -397,14 +589,7 @@
                     <button id="stopSession" class="button stop" disabled>⏹️ Parar</button>
                     <button id="askQuestion" class="button question" disabled>❓ Pregunta</button>
                     <button id="generateExplanation" class="button explanation" disabled>💡 Explica</button>
-                </div>
-
-                <div class="document-section">
-                    <div class="upload-zone" id="uploadZone">
-                        <input type="file" id="fileInput" multiple accept=".pdf,.txt" hidden>
-                        📄 PDFs para análisis
-                    </div>
-                    <div class="document-list" id="documentList"></div>
+                    <button id="documentsBtn" class="button documents">📄 Documentos</button>
                 </div>
                 
                 <div class="wake-word-info">
@@ -427,6 +612,33 @@
             <div class="response-box">
                 <h3>🤖 Pregunta/Respuesta IA</h3>
                 <textarea id="avatarResponse" readonly placeholder="El avatar generará preguntas inteligentes sobre su presentación..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para gestión de documentos -->
+    <div id="documentsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📄 Gestión de Documentos</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="fileInput" multiple accept=".pdf,.txt" hidden>
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Arrastra archivos aquí o haz clic para seleccionar</div>
+                <div class="upload-subtitle">Archivos soportados: PDF, TXT (máx. 10MB cada uno)</div>
+            </div>
+            
+            <div class="documents-grid" id="documentsGrid">
+                <!-- Los documentos aparecerán aquí -->
+            </div>
+            
+            <div class="modal-footer">
+                <div class="summary-stats" id="summaryStats">
+                    No hay documentos cargados
+                </div>
             </div>
         </div>
     </div>
@@ -683,7 +895,7 @@ Proporciona un análisis conciso que relacione el documento con los temas de tra
                     processed: true
                 });
 
-                updateDocumentList();
+                updateDocumentsGrid();
                 updateStatus("✅ Documento procesado correctamente", 'normal');
             } catch (error) {
                 console.error('Error procesando archivo:', error);
@@ -691,20 +903,70 @@ Proporciona un análisis conciso que relacione el documento con los temas de tra
             }
         }
 
-        // Actualizar lista de documentos en la UI
-        function updateDocumentList() {
-            documentList.innerHTML = '';
+        // Actualizar grid de documentos en el modal
+        function updateDocumentsGrid() {
+            documentsGrid.innerHTML = '';
             
-            loadedDocuments.forEach((doc, index) => {
-                const docItem = document.createElement('div');
-                docItem.className = 'document-item';
-                docItem.innerHTML = `
-                    <span class="document-name" title="${doc.name}">${doc.name}</span>
-                    <span class="document-status">✓</span>
-                    <button class="doc-button" onclick="removeDocument(${index})">×</button>
+            if (loadedDocuments.length === 0) {
+                documentsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: rgba(255,255,255,0.6); padding: 20px;">No hay documentos cargados</div>';
+            } else {
+                loadedDocuments.forEach((doc, index) => {
+                    const docCard = document.createElement('div');
+                    docCard.className = 'document-card';
+                    docCard.innerHTML = `
+                        <div class="document-header">
+                            <div class="document-icon">${doc.type === 'application/pdf' ? '📄' : '📝'}</div>
+                            <div class="document-actions">
+                                <button class="doc-action-btn remove" onclick="removeDocument(${index})" title="Eliminar">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="document-name">${doc.name}</div>
+                        <div class="document-info">${formatFileSize(doc.size)} • ${doc.type === 'application/pdf' ? 'PDF' : 'Texto'}</div>
+                        <div class="document-status ${doc.processed ? 'status-processed' : 'status-processing'}">
+                            ${doc.processed ? '✓ Procesado' : '⏳ Procesando...'}
+                        </div>
+                    `;
+                    documentsGrid.appendChild(docCard);
+                });
+            }
+            
+            updateSummaryStats();
+        }
+
+        // Actualizar estadísticas resumen
+        function updateSummaryStats() {
+            const totalDocs = loadedDocuments.length;
+            const processedDocs = loadedDocuments.filter(doc => doc.processed).length;
+            const totalSize = loadedDocuments.reduce((sum, doc) => sum + doc.size, 0);
+            
+            if (totalDocs === 0) {
+                summaryStats.textContent = 'No hay documentos cargados';
+            } else {
+                summaryStats.innerHTML = `
+                    <strong>${totalDocs}</strong> documento${totalDocs > 1 ? 's' : ''} cargado${totalDocs > 1 ? 's' : ''} 
+                    • <strong>${processedDocs}</strong> procesado${processedDocs > 1 ? 's' : ''} 
+                    • <strong>${formatFileSize(totalSize)}</strong> total
                 `;
-                documentList.appendChild(docItem);
-            });
+            }
+        }
+
+        // Formatear tamaño de archivo
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Funciones del modal
+        function openDocumentsModal() {
+            documentsModal.style.display = 'block';
+            updateDocumentsGrid();
+        }
+
+        function closeDocumentsModal() {
+            documentsModal.style.display = 'none';
         }
 
         // Remover documento
@@ -718,8 +980,8 @@ Proporciona un análisis conciso que relacione el documento con los temas de tra
                 documentsContent += `\n\n=== DOCUMENTO: ${doc.name} ===\n${doc.content}`;
             });
             
-            updateDocumentList();
-            updateStatus(`📄 Documento "${removedDoc.name}" removido`);
+            updateDocumentsGrid();
+            updateStatus(`📄 Documento removido`);
         }
         async function generateIntelligentExplanation() {
             if (!fullTranscription.trim()) {
@@ -1168,19 +1430,26 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
         stopSessionBtn.addEventListener('click', stopSession);
         askQuestionBtn.addEventListener('click', askIntelligentQuestion);
         generateExplanationBtn.addEventListener('click', generateExplanationManually);
+        documentsBtn.addEventListener('click', openDocumentsModal);
+
+        // Event listeners del modal
+        closeModal.addEventListener('click', closeDocumentsModal);
+        documentsModal.addEventListener('click', (e) => {
+            if (e.target === documentsModal) closeDocumentsModal();
+        });
 
         // Event listeners para subida de archivos
-        uploadZone.addEventListener('click', () => fileInput.click());
-        uploadZone.addEventListener('dragover', (e) => {
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadZone.classList.add('dragover');
+            uploadArea.classList.add('dragover');
         });
-        uploadZone.addEventListener('dragleave', () => {
-            uploadZone.classList.remove('dragover');
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
         });
-        uploadZone.addEventListener('drop', (e) => {
+        uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadZone.classList.remove('dragover');
+            uploadArea.classList.remove('dragover');
             handleFiles(e.dataTransfer.files);
         });
         fileInput.addEventListener('change', (e) => {
