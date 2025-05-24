@@ -1,4 +1,11 @@
-<!DOCTYPE html>
+.button.explanation {
+            background: linear-gradient(45deg, #9C27B0, #7B1FA2);
+            box-shadow: 0 3px 12px rgba(156, 39, 176, 0.3);
+        }
+
+        .button.explanation:hover:not(:disabled) {
+            box-shadow: 0 5px 15px rgba(156, 39, 176, 0.4);
+        }<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -94,7 +101,7 @@
         }
 
         .control-panel {
-            height: 145px;
+            height: 165px;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -322,12 +329,16 @@
                 <div class="button-row">
                     <button id="startSession" class="button">🚀 Iniciar Avatar</button>
                     <button id="stopSession" class="button stop" disabled>⏹️ Finalizar</button>
-                    <button id="askQuestion" class="button question" disabled>🤔 Pregunta IA</button>
+                </div>
+                
+                <div class="button-row">
+                    <button id="askQuestion" class="button question" disabled>❓ Generar Pregunta</button>
+                    <button id="generateExplanation" class="button explanation" disabled>💡 Generar Explicación</button>
                 </div>
                 
                 <div class="wake-word-info">
-                    <div>🎤 <span class="wake-word-highlight">Comandos de voz disponibles</span></div>
-                    <small><strong>"Luz"</strong> = Pregunta • <strong>"Toc toc"</strong> = Explicación contextual</small>
+                    <div>🎤 <span class="wake-word-highlight">Comandos de voz</span> + <span class="wake-word-highlight">Botones manuales</span></div>
+                    <small><strong>"Luz"</strong> o botón • <strong>"Toc toc"</strong> o botón</small>
                 </div>
                 
                 <div id="status" class="status">Sistema listo. Presione 'Iniciar Avatar' para comenzar</div>
@@ -425,6 +436,7 @@ RESPONDE SOLO con la pregunta o explicación directa, sin preámbulos ni explica
         const startSessionBtn = document.getElementById('startSession');
         const stopSessionBtn = document.getElementById('stopSession');
         const askQuestionBtn = document.getElementById('askQuestion');
+        const generateExplanationBtn = document.getElementById('generateExplanation');
         const statusDiv = document.getElementById('status');
         const transcriptionArea = document.getElementById('transcription');
         const responseArea = document.getElementById('avatarResponse');
@@ -754,6 +766,7 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
                 continuousRecognizer.startContinuousRecognitionAsync(() => {
                     isListening = true;
                     askQuestionBtn.disabled = false;
+                    generateExplanationBtn.disabled = false;
                     updateListeningIndicator(true);
                     updateStatus("🎧 Escuchando presentación...", 'listening');
                     console.log("✅ Escucha continua iniciada");
@@ -783,10 +796,11 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
             }
         }
 
-        // Generar y hacer pregunta
+        // Generar y hacer pregunta (función para botón)
         async function askIntelligentQuestion() {
             try {
                 askQuestionBtn.disabled = true;
+                updateStatus("🧠 Generando pregunta inteligente...");
                 
                 const question = await generateIntelligentQuestion();
                 responseArea.value = question;
@@ -794,11 +808,33 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
                 await makeAvatarSpeak(question);
                 
                 askQuestionBtn.disabled = false;
+                updateStatus("✅ Pregunta realizada - Continuando escucha", 'listening');
                 
             } catch (error) {
                 console.error('Error al generar pregunta:', error);
                 updateStatus("Error al generar pregunta", 'error');
                 askQuestionBtn.disabled = false;
+            }
+        }
+
+        // Generar y hacer explicación (función para botón)
+        async function generateExplanationManually() {
+            try {
+                generateExplanationBtn.disabled = true;
+                updateStatus("🧠 Generando explicación detallada...");
+                
+                const explanation = await generateIntelligentExplanation();
+                responseArea.value = explanation;
+                
+                await makeAvatarSpeak(explanation);
+                
+                generateExplanationBtn.disabled = false;
+                updateStatus("✅ Explicación proporcionada - Continuando escucha", 'listening');
+                
+            } catch (error) {
+                console.error('Error al generar explicación:', error);
+                updateStatus("Error al generar explicación", 'error');
+                generateExplanationBtn.disabled = false;
             }
         }
 
@@ -859,6 +895,7 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
             startSessionBtn.disabled = false;
             stopSessionBtn.disabled = true;
             askQuestionBtn.disabled = true;
+            generateExplanationBtn.disabled = true;
             
             updateStatus("🔴 Sesión finalizada");
             updateListeningIndicator(false);
@@ -874,6 +911,7 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
         startSessionBtn.addEventListener('click', startSession);
         stopSessionBtn.addEventListener('click', stopSession);
         askQuestionBtn.addEventListener('click', askIntelligentQuestion);
+        generateExplanationBtn.addEventListener('click', generateExplanationManually);
 
         // Inicialización
         updateStatus("💡 Luz está lista - Presione 'Iniciar Avatar' para comenzar");
