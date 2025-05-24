@@ -1,11 +1,3 @@
-.button.explanation {
-            background: linear-gradient(45deg, #9C27B0, #7B1FA2);
-            box-shadow: 0 3px 12px rgba(156, 39, 176, 0.3);
-        }
-
-        .button.explanation:hover:not(:disabled) {
-            box-shadow: 0 5px 15px rgba(156, 39, 176, 0.4);
-        }<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -84,13 +76,13 @@
 
         #videoContainer {
             width: 100%;
-            height: calc(100% - 160px);
+            height: calc(100% - 140px);
             background: #000;
             border-radius: 15px;
             overflow: hidden;
             margin-bottom: 15px;
             border: 2px solid rgba(255,255,255,0.3);
-            min-height: 500px;
+            min-height: 520px;
         }
 
         #remoteVideo video {
@@ -101,7 +93,7 @@
         }
 
         .control-panel {
-            height: 165px;
+            height: 140px;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -167,19 +159,21 @@
             background: linear-gradient(45deg, #0056b3, #003f7f);
             border: none;
             color: white;
-            padding: 12px 20px;
-            margin: 3px;
-            border-radius: 20px;
+            padding: 8px 12px;
+            margin: 1px;
+            border-radius: 16px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 11px;
             font-weight: bold;
             transition: all 0.3s ease;
-            box-shadow: 0 3px 12px rgba(0, 86, 179, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 86, 179, 0.3);
+            white-space: nowrap;
+            min-width: fit-content;
         }
 
         .button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 86, 179, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 86, 179, 0.4);
             background: linear-gradient(45deg, #0066cc, #004499);
         }
 
@@ -272,8 +266,9 @@
 
         .button-row {
             display: flex;
-            gap: 5px;
+            gap: 4px;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         .word-count {
@@ -327,13 +322,10 @@
             
             <div class="control-panel">
                 <div class="button-row">
-                    <button id="startSession" class="button">🚀 Iniciar Avatar</button>
-                    <button id="stopSession" class="button stop" disabled>⏹️ Finalizar</button>
-                </div>
-                
-                <div class="button-row">
-                    <button id="askQuestion" class="button question" disabled>❓ Generar Pregunta</button>
-                    <button id="generateExplanation" class="button explanation" disabled>💡 Generar Explicación</button>
+                    <button id="startSession" class="button">🚀 Iniciar</button>
+                    <button id="stopSession" class="button stop" disabled>⏹️ Parar</button>
+                    <button id="askQuestion" class="button question" disabled>❓ Pregunta</button>
+                    <button id="generateExplanation" class="button explanation" disabled>💡 Explica</button>
                 </div>
                 
                 <div class="wake-word-info">
