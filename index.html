@@ -171,43 +171,42 @@
             box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
         }
 
-        /* Modal para gestión de documentos */
+        /* Modal para gestión de documentos - Solo cubre área de controles */
         .modal {
             display: none;
             position: fixed;
             z-index: 1000;
-            left: 0;
+            right: 0;
             top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.7);
+            width: 400px;
+            height: 100vh;
+            background-color: rgba(0,0,0,0.9);
             backdrop-filter: blur(5px);
         }
 
         .modal-content {
             background: linear-gradient(135deg, #003f7f 0%, #0056b3 100%);
-            margin: 5% auto;
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 80vh;
+            margin: 0;
+            padding: 20px;
+            border-radius: 0;
+            width: 100%;
+            height: 100%;
             overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 2px solid #ffd700;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+            border-left: 3px solid #ffd700;
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             border-bottom: 2px solid #ffd700;
-            padding-bottom: 15px;
+            padding-bottom: 10px;
         }
 
         .modal-title {
-            font-size: 1.5em;
+            font-size: 1.2em;
             color: white;
             font-weight: bold;
         }
@@ -216,9 +215,10 @@
             background: none;
             border: none;
             color: #ffd700;
-            font-size: 2em;
+            font-size: 1.5em;
             cursor: pointer;
             transition: color 0.3s;
+            padding: 5px;
         }
 
         .close-modal:hover {
@@ -226,68 +226,68 @@
         }
 
         .upload-area {
-            border: 3px dashed #ffd700;
-            border-radius: 15px;
-            padding: 40px;
+            border: 2px dashed #ffd700;
+            border-radius: 10px;
+            padding: 25px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             background: rgba(255,255,255,0.05);
         }
 
         .upload-area:hover, .upload-area.dragover {
             background: rgba(255,215,0,0.1);
             border-color: #ffed4a;
-            transform: scale(1.02);
+            transform: scale(1.01);
         }
 
         .upload-icon {
-            font-size: 3em;
-            margin-bottom: 15px;
+            font-size: 2em;
+            margin-bottom: 10px;
             color: #ffd700;
         }
 
         .upload-text {
-            font-size: 1.2em;
+            font-size: 1em;
             color: white;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .upload-subtitle {
-            font-size: 0.9em;
+            font-size: 0.8em;
             color: rgba(255,255,255,0.7);
         }
 
         .documents-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
         }
 
         .document-card {
             background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            padding: 15px;
+            border-radius: 8px;
+            padding: 12px;
             border: 1px solid rgba(255,255,255,0.2);
             transition: all 0.3s ease;
         }
 
         .document-card:hover {
             background: rgba(255,255,255,0.15);
-            transform: translateY(-2px);
+            transform: translateX(-3px);
         }
 
         .document-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .document-icon {
-            font-size: 2em;
+            font-size: 1.5em;
             color: #ffd700;
         }
 
@@ -908,7 +908,7 @@ Proporciona un análisis conciso que relacione el documento con los temas de tra
             documentsGrid.innerHTML = '';
             
             if (loadedDocuments.length === 0) {
-                documentsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: rgba(255,255,255,0.6); padding: 20px;">No hay documentos cargados</div>';
+                documentsGrid.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.6); padding: 20px; font-size: 0.9em;">No hay documentos cargados</div>';
             } else {
                 loadedDocuments.forEach((doc, index) => {
                     const docCard = document.createElement('div');
@@ -961,13 +961,30 @@ Proporciona un análisis conciso que relacione el documento con los temas de tra
 
         // Funciones del modal
         function openDocumentsModal() {
+            console.log("Abriendo modal de documentos...");
             documentsModal.style.display = 'block';
             updateDocumentsGrid();
         }
 
         function closeDocumentsModal() {
+            console.log("Cerrando modal de documentos...");
             documentsModal.style.display = 'none';
         }
+
+        // Event listeners del modal
+        documentsBtn.addEventListener('click', function() {
+            console.log("Botón documentos clickeado");
+            openDocumentsModal();
+        });
+        
+        closeModal.addEventListener('click', closeDocumentsModal);
+        
+        // Cerrar modal al hacer clic fuera del contenido
+        documentsModal.addEventListener('click', function(e) {
+            if (e.target === documentsModal) {
+                closeDocumentsModal();
+            }
+        });
 
         // Remover documento
         function removeDocument(index) {
@@ -1430,13 +1447,6 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
         stopSessionBtn.addEventListener('click', stopSession);
         askQuestionBtn.addEventListener('click', askIntelligentQuestion);
         generateExplanationBtn.addEventListener('click', generateExplanationManually);
-        documentsBtn.addEventListener('click', openDocumentsModal);
-
-        // Event listeners del modal
-        closeModal.addEventListener('click', closeDocumentsModal);
-        documentsModal.addEventListener('click', (e) => {
-            if (e.target === documentsModal) closeDocumentsModal();
-        });
 
         // Event listeners para subida de archivos
         uploadArea.addEventListener('click', () => fileInput.click());
