@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <title>Avatar Virtual - Fiscalía General de la Nación</title>
     <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Configurar PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
     <style>
         * {
             margin: 0;
@@ -77,13 +82,13 @@
 
         #videoContainer {
             width: 100%;
-            height: calc(100% - 90px);
+            height: calc(100% - 120px);
             background: #000;
             border-radius: 15px;
             overflow: hidden;
             margin-bottom: 10px;
             border: 2px solid rgba(255,255,255,0.3);
-            min-height: 580px;
+            min-height: 550px;
         }
 
         #remoteVideo video {
@@ -94,10 +99,75 @@
         }
 
         .control-panel {
-            height: 80px;
+            height: 120px;
             display: flex;
             flex-direction: column;
             gap: 4px;
+        }
+
+        .document-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 8px;
+            margin: 4px 0;
+            border: 1px solid rgba(255,215,0,0.2);
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(255,215,0,0.5);
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 10px;
+        }
+
+        .upload-zone:hover {
+            background: rgba(255,215,0,0.1);
+            border-color: #ffd700;
+        }
+
+        .upload-zone.dragover {
+            background: rgba(255,215,0,0.2);
+            border-color: #ffed4a;
+        }
+
+        .document-list {
+            max-height: 60px;
+            overflow-y: auto;
+        }
+
+        .document-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 6px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+            margin: 2px 0;
+            font-size: 9px;
+        }
+
+        .document-name {
+            flex: 1;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .document-status {
+            font-size: 8px;
+            color: #4CAF50;
+            margin-left: 5px;
+        }
+
+        .doc-button {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            padding: 2px 6px;
+            font-size: 8px;
+            border-radius: 10px;
+            margin-left: 4px;
         }
 
         .controls-section {
@@ -328,10 +398,18 @@
                     <button id="askQuestion" class="button question" disabled>❓ Pregunta</button>
                     <button id="generateExplanation" class="button explanation" disabled>💡 Explica</button>
                 </div>
+
+                <div class="document-section">
+                    <div class="upload-zone" id="uploadZone">
+                        <input type="file" id="fileInput" multiple accept=".pdf,.txt" hidden>
+                        📄 PDFs para análisis
+                    </div>
+                    <div class="document-list" id="documentList"></div>
+                </div>
                 
                 <div class="wake-word-info">
-                    <div>🎤 <span class="wake-word-highlight">Comandos de voz</span> + <span class="wake-word-highlight">Botones manuales</span></div>
-                    <small><strong>"Luz"</strong> o botón • <strong>"Toc toc"</strong> o botón</small>
+                    <div>🎤 <span class="wake-word-highlight">Comandos disponibles</span></div>
+                    <small><strong>"Luz"</strong> = Pregunta • <strong>"Toc toc"</strong> = Explicación • <strong>"Analiza"</strong> = Documento</small>
                 </div>
                 
                 <div id="status" class="status">Sistema listo. Presione 'Iniciar Avatar' para comenzar</div>
@@ -371,6 +449,7 @@ TU FUNCIÓN PRINCIPAL:
 - Analizar el contenido transcrito de la presentación de la Fiscal
 - Generar preguntas inteligentes, relevantes y profesionales sobre lo expuesto (comando "Luz")
 - Proporcionar explicaciones detalladas y profundizaciones sobre temas específicos (comando "Toc toc")
+- Analizar documentos PDF cargados y responder preguntas sobre ellos (comando "Analiza")
 - Hacer preguntas que demuestren comprensión profunda del tema
 - Solicitar aclaraciones sobre puntos específicos mencionados
 - Explicar conceptos complejos de manera clara y accesible
@@ -399,15 +478,22 @@ PARA "TOC TOC" (EXPLICACIONES CONTEXTUALES):
 5. Implementación práctica: Pasos concretos de proyectos específicos presentados
 6. IMPORTANTE: Si el tema no está relacionado con la presentación actual, declinar educadamente manteniendo el enfoque
 
+PARA "ANALIZA" (ANÁLISIS DE DOCUMENTOS):
+1. Análisis del contenido del documento más reciente cargado
+2. Resumen de puntos clave del documento
+3. Relación del documento con la Estrategia de Transformación Digital
+4. Identificación de elementos relevantes para la Fiscalía
+5. Extracción de datos específicos o estadísticas importantes
+
 ESTILO DE RESPUESTAS:
 - Formal pero conversacional
-- Específicas basadas en lo realmente dicho
+- Específicas basadas en lo realmente dicho o documentado
 - Máximo 120 palabras por respuesta
 - Una sola respuesta por vez
 - Que demuestren escucha activa e inteligente
 - Sin emojis en las respuestas
 
-RESPONDE SOLO con la pregunta o explicación directa, sin preámbulos ni explicaciones adicionales.`,
+RESPONDE SOLO con la pregunta, explicación o análisis directo, sin preámbulos ni explicaciones adicionales.`,
             sttLocale: "es-CO",
             ttsVoice: "es-CO-SalomeNeural",
             avatarCharacter: "Meg",
@@ -424,6 +510,8 @@ RESPONDE SOLO con la pregunta o explicación directa, sin preámbulos ni explica
         let fullTranscription = ""; // Almacena toda la transcripción
         let lastSentenceCount = 0;
         let isProcessingQuestion = false; // Para evitar múltiples activaciones
+        let loadedDocuments = []; // Almacena documentos cargados
+        let documentsContent = ""; // Contenido de todos los documentos
 
         // Elementos DOM
         const startSessionBtn = document.getElementById('startSession');
@@ -488,7 +576,151 @@ RESPONDE SOLO con la pregunta o explicación directa, sin preámbulos ni explica
             }
         }
 
-        // Generar explicación inteligente basada en la transcripción
+        // Generar análisis de documento
+        async function generateDocumentAnalysis() {
+            if (!documentsContent.trim()) {
+                return "No hay documentos cargados para analizar. Por favor, suba un documento PDF primero.";
+            }
+
+            try {
+                updateStatus("🧠 Analizando documento cargado...");
+                
+                const response = await fetch(`${config.azureOpenAIEndpoint}openai/deployments/${config.azureOpenAIDeploymentName}/chat/completions?api-version=${config.azureOpenAIApiVersion}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'api-key': config.azureOpenAIApiKey
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            { role: "system", content: config.systemPrompt },
+                            { role: "user", content: `COMANDO: ANALIZA (análisis de documento)
+
+INSTRUCCIONES: Analiza el siguiente documento y proporciona un análisis específico relacionado con la Estrategia de Transformación Digital de la Fiscalía General de la Nación.
+
+CONTENIDO DEL DOCUMENTO:
+"${documentsContent.substring(0, 8000)}"
+
+CONTEXTO DE LA PRESENTACIÓN ACTUAL:
+"${fullTranscription}"
+
+Proporciona un análisis conciso que relacione el documento con los temas de transformación digital de la Fiscalía.` }
+                        ],
+                        max_tokens: 200,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content.trim();
+            } catch (error) {
+                console.error('Error OpenAI:', error);
+                return "No pude analizar el documento en este momento. Por favor, intente nuevamente.";
+            }
+        }
+
+        // Extraer texto de PDF
+        async function extractTextFromPDF(file) {
+            try {
+                updateStatus("📄 Procesando PDF...");
+                
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                
+                let fullText = '';
+                const totalPages = pdf.numPages;
+                
+                for (let i = 1; i <= Math.min(totalPages, 20); i++) { // Limitar a 20 páginas
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n';
+                }
+                
+                return fullText;
+            } catch (error) {
+                console.error('Error extrayendo texto del PDF:', error);
+                throw new Error('No se pudo procesar el PDF');
+            }
+        }
+
+        // Extraer texto de archivo de texto
+        async function extractTextFromTXT(file) {
+            try {
+                return await file.text();
+            } catch (error) {
+                console.error('Error leyendo archivo de texto:', error);
+                throw new Error('No se pudo leer el archivo de texto');
+            }
+        }
+
+        // Procesar archivo subido
+        async function processUploadedFile(file) {
+            try {
+                let content = '';
+                
+                if (file.type === 'application/pdf') {
+                    content = await extractTextFromPDF(file);
+                } else if (file.type === 'text/plain') {
+                    content = await extractTextFromTXT(file);
+                } else {
+                    throw new Error('Tipo de archivo no soportado');
+                }
+
+                // Agregar a la base de conocimiento
+                documentsContent += `\n\n=== DOCUMENTO: ${file.name} ===\n${content}`;
+                
+                // Agregar a la lista de documentos
+                loadedDocuments.push({
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    content: content,
+                    processed: true
+                });
+
+                updateDocumentList();
+                updateStatus("✅ Documento procesado correctamente", 'normal');
+            } catch (error) {
+                console.error('Error procesando archivo:', error);
+                updateStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Actualizar lista de documentos en la UI
+        function updateDocumentList() {
+            documentList.innerHTML = '';
+            
+            loadedDocuments.forEach((doc, index) => {
+                const docItem = document.createElement('div');
+                docItem.className = 'document-item';
+                docItem.innerHTML = `
+                    <span class="document-name" title="${doc.name}">${doc.name}</span>
+                    <span class="document-status">✓</span>
+                    <button class="doc-button" onclick="removeDocument(${index})">×</button>
+                `;
+                documentList.appendChild(docItem);
+            });
+        }
+
+        // Remover documento
+        function removeDocument(index) {
+            const removedDoc = loadedDocuments[index];
+            loadedDocuments.splice(index, 1);
+            
+            // Reconstruir contenido de documentos
+            documentsContent = '';
+            loadedDocuments.forEach(doc => {
+                documentsContent += `\n\n=== DOCUMENTO: ${doc.name} ===\n${doc.content}`;
+            });
+            
+            updateDocumentList();
+            updateStatus(`📄 Documento "${removedDoc.name}" removido`);
+        }
         async function generateIntelligentExplanation() {
             if (!fullTranscription.trim()) {
                 return "Señora Fiscal, estoy lista para proporcionar explicaciones detalladas sobre los temas que exponga en su presentación.";
@@ -645,10 +877,14 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
                         console.log("¿Contiene Luz?", containsLuzCommand);
                         console.log("¿Contiene Toc?", containsTocCommand);
                         
-                        if ((containsLuzCommand || containsTocCommand) && !isProcessingQuestion) {
+                        // Patrón para "Analiza" (análisis de documento)
+                        const analizaPattern = /(?:^|\s|[.,;!?])\s*analiza\s*(?:[.,;!?]|\s|$)/i;
+                        const containsAnalizaCommand = textLower.includes('analiza');
+                        
+                        if ((containsLuzCommand || containsTocCommand || containsAnalizaCommand) && !isProcessingQuestion) {
                             isProcessingQuestion = true;
                             
-                            if (containsLuzCommand && !containsTocCommand) {
+                            if (containsLuzCommand && !containsTocCommand && !containsAnalizaCommand) {
                                 updateStatus("🎯 Comando 'Luz' detectado - Generando pregunta inteligente...");
                                 
                                 // Limpiar comando de la transcripción
@@ -672,7 +908,7 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
                                     updateStatus("Error al generar pregunta", 'error');
                                 }
                                 
-                            } else if (containsTocCommand) {
+                            } else if (containsTocCommand && !containsAnalizaCommand) {
                                 updateStatus("🎯 Comando 'Toc toc' detectado - Generando explicación...");
                                 console.log("Procesando comando Toc toc...");
                                 
@@ -697,6 +933,33 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
                                 } catch (error) {
                                     console.error('Error al generar explicación:', error);
                                     updateStatus("Error al generar explicación", 'error');
+                                }
+                                
+                            } else if (containsAnalizaCommand) {
+                                updateStatus("🎯 Comando 'Analiza' detectado - Analizando documento...");
+                                console.log("Procesando comando Analiza...");
+                                
+                                // Limpiar comando de la transcripción
+                                const textWithoutCommand = newText.replace(/analiza/gi, '').trim();
+                                if (textWithoutCommand) {
+                                    if (fullTranscription) {
+                                        fullTranscription += " " + textWithoutCommand;
+                                    } else {
+                                        fullTranscription = textWithoutCommand;
+                                    }
+                                }
+                                
+                                // Generar análisis de documento
+                                try {
+                                    console.log("Llamando a generateDocumentAnalysis...");
+                                    const analysis = await generateDocumentAnalysis();
+                                    console.log("Análisis generado:", analysis);
+                                    responseArea.value = analysis;
+                                    await makeAvatarSpeak(analysis);
+                                    updateStatus("✅ Análisis completado - Continuando escucha", 'listening');
+                                } catch (error) {
+                                    console.error('Error al generar análisis:', error);
+                                    updateStatus("Error al generar análisis", 'error');
                                 }
                             }
                             
@@ -905,6 +1168,39 @@ Analiza esta transcripción y proporciona UNA explicación detallada sobre el te
         stopSessionBtn.addEventListener('click', stopSession);
         askQuestionBtn.addEventListener('click', askIntelligentQuestion);
         generateExplanationBtn.addEventListener('click', generateExplanationManually);
+
+        // Event listeners para subida de archivos
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        // Manejar archivos subidos
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type === 'application/pdf' || file.type === 'text/plain') {
+                    if (file.size < 10 * 1024 * 1024) { // Límite 10MB
+                        processUploadedFile(file);
+                    } else {
+                        updateStatus(`❌ Archivo "${file.name}" muy grande (máx 10MB)`, 'error');
+                    }
+                } else {
+                    updateStatus(`❌ Tipo de archivo no soportado: ${file.name}`, 'error');
+                }
+            });
+        }
 
         // Inicialización
         updateStatus("💡 Luz está lista - Presione 'Iniciar Avatar' para comenzar");
